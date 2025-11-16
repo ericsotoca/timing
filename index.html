@@ -7,7 +7,7 @@
     <meta name="description" content="Une application de calculatrice simple et efficace.">
     <meta name="theme-color" content="#ffffff">
 
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sb3IiOiAiI2ZlZmVlZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sb3IiOiAiI2ZlZmVmZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
 
     <style>
         :root {
@@ -158,8 +158,6 @@
     </div>
 
     <!-- Modales -->
-    <div id="setup-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Définir votre code secret</h2><p>Entrez un code à 4 chiffres.</p><input type="password" id="pincode-input" maxlength="4" pattern="\d*" inputmode="numeric"><button id="pincode-submit" class="btn">Définir</button></div></div>
-    <div id="onboarding-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Configuration Initiale</h2><p>Ajout de votre historique complet.</p><button id="start-onboarding-btn" class="btn">Commencer</button></div></div>
     <div id="day-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2 id="day-modal-title"></h2>
@@ -187,9 +185,51 @@
             const PIN_KEY = 'discreetAppPin_v13';
             let inactivityTimer;
 
+            // Données directement intégrées dans l'état initial
             let state = {
-                currentDate: new Date(),
-                events: {},
+                currentDate: new Date("2025-11-16T13:52:57.274Z"),
+                events: {
+                    "2025-05-13":{"types":["A"],"note":"Import initial"},
+                    "2025-05-19":{"types":["A"],"note":"Import initial"},
+                    "2025-05-24":{"types":["A"],"note":"Import initial"},
+                    "2025-06-03":{"types":["A"],"note":"Import initial"},
+                    "2025-06-06":{"types":["A"],"note":"Import initial"},
+                    "2025-06-11":{"types":["A"],"note":"Import initial"},
+                    "2025-06-17":{"types":["A"],"note":"Import initial"},
+                    "2025-06-21":{"types":["A"],"note":"Import initial"},
+                    "2025-07-20":{"types":["A"],"note":"Import initial"},
+                    "2025-07-28":{"types":["A"],"note":"Import initial"},
+                    "2025-08-18":{"types":["A"],"note":"Import initial"},
+                    "2025-08-23":{"types":["A"],"note":"Import initial"},
+                    "2025-08-27":{"types":["A"],"note":"Import initial"},
+                    "2025-09-07":{"types":["A","Rd"],"note":"Import initial"},
+                    "2025-09-10":{"types":["A"],"note":"Import initial"},
+                    "2025-09-30":{"types":["A","Rd"],"note":"Import initial"},
+                    "2025-10-01":{"types":["R","A"],"note":"Import initial"},
+                    "2025-10-04":{"types":["A"],"note":"Import initial"},
+                    "2025-10-15":{"types":["A"],"note":"Import initial"},
+                    "2025-10-28":{"types":["A","R"],"note":"Import initial"},
+                    "2025-11-03":{"types":["A"],"note":"Import initial"},
+                    "2025-11-04":{"types":["A"],"note":"Import initial"},
+                    "2025-11-11":{"types":["A"],"note":"Import initial"},
+                    "2025-10-27":{"types":["A","R"],"note":""},
+                    "2025-09-16":{"types":[],"note":"Pic ajouté auto."},
+                    "2025-11-23":{"types":["Rd","V"],"note":""},
+                    "2025-11-09":{"types":["O"],"note":""},
+                    "2025-11-24":{"types":["R","V"],"note":""},
+                    "2025-12-22":{"types":["R"],"note":""},
+                    "2025-12-07":{"types":["O","V"],"note":""},
+                    "2025-12-08":{"types":["V"],"note":""},
+                    "2025-12-09":{"types":["V"],"note":""},
+                    "2025-12-10":{"types":["V"],"note":""},
+                    "2025-12-11":{"types":["V"],"note":""},
+                    "2025-12-12":{"types":["V"],"note":""},
+                    "2025-12-13":{"types":["V"],"note":""},
+                    "2025-12-14":{"types":["V"],"note":""},
+                    "2025-11-22":{"types":["V"],"note":""},
+                    "2025-11-25":{"types":["V"],"note":""},
+                    "2025-11-26":{"types":["V"],"note":""}
+                },
                 settings: { lutealPhase: 14 }
             };
 
@@ -203,6 +243,9 @@
                     const loaded = JSON.parse(data);
                     state = { ...state, ...loaded, settings: { ...state.settings, ...loaded.settings } };
                     state.currentDate = new Date(state.currentDate);
+                } else {
+                    // Si aucune donnée n'est dans le localStorage, on sauvegarde l'état initial
+                    saveData();
                 }
                 $('#luteal-phase-duration').value = state.settings.lutealPhase;
             };
@@ -428,6 +471,11 @@
 
 
             const init = () => {
+                // Charger les données (soit depuis le localStorage, soit l'état initial)
+                loadData();
+                // Le code PIN '1314' est maintenant la référence
+                const appPin = "1314";
+                
                 document.body.addEventListener('click', resetInactivityTimer);
                 $$('.nav-btn').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.view)));
                 
@@ -448,14 +496,13 @@
                 $('#close-day-modal-btn').addEventListener('click', closeDayModal);
 
                 $('#save-settings-btn').addEventListener('click', () => { state.settings.lutealPhase = parseInt($('#luteal-phase-duration').value) || 14; saveData(); alert('Paramètres enregistrés !'); refreshActiveView(); });
-                $('#export-btn').addEventListener('click', () => { $('#export-data-field').value = JSON.stringify({state: state, pin: localStorage.getItem(PIN_KEY)}); alert('Code de sauvegarde généré.'); });
+                $('#export-btn').addEventListener('click', () => { $('#export-data-field').value = JSON.stringify({state: state, pin: appPin}); alert('Code de sauvegarde généré.'); });
                 $('#import-btn').addEventListener('click', () => {
                     if(!confirm("Importer écrasera vos données. Continuer ?")) return;
                     try {
                         const data = JSON.parse($('#import-data-field').value);
                         localStorage.setItem(APP_DATA_KEY, JSON.stringify(data.state));
-                        localStorage.setItem(PIN_KEY, data.pin);
-                        alert('Importation réussie !'); location.reload();
+                        alert('Importation réussie ! L\'application va se recharger.'); location.reload();
                     } catch (e) { alert('Erreur d\'importation.'); }
                 });
                 $('#reset-app-btn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment tout réinitialiser ?")) { localStorage.clear(); location.reload(); } });
@@ -471,41 +518,10 @@
                     if (!e.target.matches('button')) return;
                     const key = e.target.dataset.key;
                     const d = $('#calc-display');
-                    if (key === '=') { if (d.textContent === localStorage.getItem(PIN_KEY)) unlockApp(); else try { d.textContent = eval(d.textContent.replace(/×/g, '*').replace(/÷/g, '/')) || '0'; } catch { d.textContent = 'Erreur'; } }
+                    if (key === '=') { if (d.textContent === appPin) unlockApp(); else try { d.textContent = eval(d.textContent.replace(/×/g, '*').replace(/÷/g, '/')) || '0'; } catch { d.textContent = 'Erreur'; } }
                     else if (key === 'clear') d.textContent = '0';
                     else if (key === 'backspace') d.textContent = d.textContent.slice(0, -1) || '0';
                     else d.textContent = (d.textContent === '0' && !'*/+-%'.includes(key)) ? e.target.textContent : d.textContent + e.target.textContent;
-                });
-
-                if (!localStorage.getItem(PIN_KEY)) $('#setup-modal').classList.remove('hidden');
-                else loadData();
-                $('#pincode-submit').addEventListener('click', () => {
-                    const pin = $('#pincode-input').value;
-                    if (pin.length === 4 && /^\d+$/.test(pin)) {
-                        localStorage.setItem(PIN_KEY, pin);
-                        $('#setup-modal').classList.add('hidden');
-                        if (Object.keys(state.events).length === 0) $('#onboarding-modal').classList.remove('hidden');
-                    } else alert("Code invalide.");
-                });
-                
-                $('#start-onboarding-btn').addEventListener('click', () => {
-                    const initialHistory = {
-                        '2025-05-13': ['A'],'2025-05-19': ['A'],'2025-05-24': ['A'],
-                        '2025-06-03': ['A'],'2025-06-06': ['A'],'2025-06-11': ['A'],'2025-06-17': ['A'],
-                        '2025-06-21': ['A', 'O'], '2025-07-20': ['A'], '2025-07-28': ['A', 'O'],
-                        '2025-08-18': ['A'],'2025-08-23': ['A'],'2025-08-27': ['A'],
-                        '2025-09-07': ['A', 'Rd'],'2025-09-10': ['A'],
-                        '2025-09-30': ['A', 'Rd'],'2025-10-01': ['R'],
-                        '2025-10-04': ['A'],'2025-10-15': ['A'],
-                        '2025-10-27': ['A', 'Rd'],'2025-10-28': ['A', 'R'],
-                        '2025-11-03': ['A'],'2025-11-04': ['A'],'2025-11-11': ['A']
-                    };
-                    for(const date in initialHistory){
-                        state.events[date] = { types: initialHistory[date], note: 'Import initial' };
-                    }
-                    saveData();
-                    $('#onboarding-modal').classList.add('hidden');
-                    alert('Configuration avec historique complet terminée !');
                 });
             };
 

@@ -7,7 +7,7 @@
     <meta name="description" content="Une application de calculatrice simple et efficace.">
     <meta name="theme-color" content="#ffffff">
 
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sb3IiOiAiI2ZlZmVmZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sb3IiOiAiI2ZlZmVlZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
 
     <style>
         :root {
@@ -282,18 +282,31 @@
                 const predictionsContainer = $('#predictions-container');
                 predictionsContainer.innerHTML = '';
                 
-                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const today = new Date(); 
+                today.setHours(0, 0, 0, 0);
+
+                let allFutureEvents = [];
+
+                // CORRECTION : Étape 1 - Récupérer les événements futurs saisis manuellement
+                for (const dateStr in state.events) {
+                    const eventDate = new Date(dateStr + 'T00:00:00');
+                    if (eventDate >= today) {
+                        if (state.events[dateStr].types.some(t => ['R', 'Rd', 'Rf'].includes(t))) {
+                            allFutureEvents.push({ type: 'R', date: eventDate, isManual: true });
+                        }
+                        if (state.events[dateStr].types.includes('O')) {
+                            allFutureEvents.push({ type: 'O', date: eventDate, isManual: true });
+                        }
+                    }
+                }
 
                 const predictionData = getPredictionData();
-                if (!predictionData) {
-                    predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
-                } else {
+                if (predictionData) {
                     const { avgCycle, lastRDate, confidence } = predictionData;
                     const starsHTML = renderStars(confidence);
-                    
-                    const futurePredictions = [];
                     const lastRDateObj = new Date(lastRDate);
-
+                    
+                    // Étape 2 - Calculer les prédictions
                     for (let i = 1; i <= 4; i++) {
                         let predictedR = new Date(lastRDateObj);
                         predictedR.setDate(predictedR.getDate() + Math.round(avgCycle * i));
@@ -301,27 +314,55 @@
                         let predictedO = new Date(predictedR);
                         predictedO.setDate(predictedO.getDate() - state.settings.lutealPhase);
 
-                        if (predictedR >= today) futurePredictions.push({ type: 'R', date: predictedR });
-                        if (predictedO >= today) futurePredictions.push({ type: 'O', date: predictedO });
+                        if (predictedR >= today) allFutureEvents.push({ type: 'R', date: predictedR, isManual: false, confidence, starsHTML });
+                        if (predictedO >= today) allFutureEvents.push({ type: 'O', date: predictedO, isManual: false, confidence, starsHTML });
                     }
+                }
+                
+                // Étape 3 - Fusionner, dédoublonner et trier
+                const uniqueEvents = new Map();
+                allFutureEvents.sort((a, b) => a.date - b.date);
 
-                    futurePredictions.sort((a, b) => a.date - b.date).slice(0, 2).forEach(event => {
-                        const eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
+                for (const event of allFutureEvents) {
+                    const key = event.date.toISOString().split('T')[0] + '-' + event.type;
+                    if (!uniqueEvents.has(key)) {
+                        uniqueEvents.set(key, event);
+                    }
+                }
+
+                const finalEventsToShow = Array.from(uniqueEvents.values());
+
+                // Étape 4 - Afficher les 2 événements les plus proches
+                if (finalEventsToShow.length > 0) {
+                    finalEventsToShow.slice(0, 2).forEach(event => {
+                        let eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
+                        if (event.isManual) {
+                            eventName += ' (manuel)';
+                        }
+
                         const eventColor = event.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
-                        const margin = 1;
-                        const startDate = new Date(event.date); startDate.setDate(startDate.getDate() - margin);
-                        const endDate = new Date(event.date); endDate.setDate(endDate.getDate() + margin);
-                        const dateRangeString = `du ${startDate.toLocaleDateString('fr-FR')} au ${endDate.toLocaleDateString('fr-FR')}`;
-                        const daysToStart = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
+                        const dateString = event.date.toLocaleDateString('fr-FR');
+                        
+                        const daysToStart = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
                         let countdownText = `Commence dans ${daysToStart} jours`;
                         if (daysToStart === 1) countdownText = `Commence demain`;
                         else if (daysToStart === 0) countdownText = `Commence aujourd'hui`;
-                        else if (daysToStart < 0 && today <= endDate) countdownText = `En ce moment`;
-                        
-                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
+
+                        predictionsContainer.innerHTML += `
+                            <div class="prediction-card">
+                                <h4>${eventName}</h4>
+                                <div class="prediction-date" style="color: ${eventColor}">${dateString}</div>
+                                <div class="prediction-countdown">${countdownText}</div>
+                                ${!event.isManual ? `<div class="confidence-stars" title="Indice de confiance : ${event.confidence.toFixed(1)}/5">${event.starsHTML}</div>` : ''}
+                            </div>`;
                     });
+                } else if (!predictionData) {
+                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
+                } else {
+                    predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Aucun événement futur proche, manuel ou prédit.</p>`;
                 }
             };
+
             
             const renderJournalView = () => {
                 const tableBody = $('#journal-table tbody');
@@ -512,7 +553,6 @@
                 $('#prev-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); });
                 $('#next-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); });
                 
-                // NOUVEL ÉVÉNEMENT pour le bouton d'actualisation
                 $('#refresh-dashboard-btn').addEventListener('click', () => {
                     renderDashboard();
                     const btn = $('#refresh-dashboard-btn');

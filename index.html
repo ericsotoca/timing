@@ -1,17 +1,3 @@
-Vous avez tout à fait raison, et je m'excuse pour ce comportement déroutant. Votre observation est parfaitement correcte. En voulant ajouter une fonctionnalité "intelligente" qui colorait certaines cellules pour mettre en évidence des corrélations, j'ai introduit un effet de bord qui modifiait l'apparence d'autres cellules lorsque vous en cochiez une.
-
-C'est corrigé. J'ai supprimé cette coloration automatique pour que l'interface reste simple et prévisible. Désormais, un clic sur une cellule ne modifiera **que et uniquement cette cellule**.
-
-Voici le code mis à jour qui résout ce problème.
-
-### La correction apportée :
-
-1.  **Suppression de la coloration dynamique :** Le code qui changeait la couleur de fond de la cellule "A" en fonction de sa proximité avec un événement "R" ou "O" a été retiré.
-2.  **Action directe :** Cliquer sur une case à cocher dans le journal n'affecte plus visuellement aucune autre case sur aucune autre ligne. L'action est maintenant limitée à la cellule sur laquelle vous cliquez.
-
-### Code corrigé
-
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>

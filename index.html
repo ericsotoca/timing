@@ -178,8 +178,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v4';
-            const PIN_KEY = 'discreetAppPin_v4';
+            const APP_DATA_KEY = 'discreetAppData_v5';
+            const PIN_KEY = 'discreetAppPin_v5';
             let inactivityTimer;
 
             let state = {
@@ -238,10 +238,15 @@
                 predictionsContainer.innerHTML = '';
                 historyList.innerHTML = '';
                 
-                // IMPORTANT: Les prédictions se basent sur les dates de début (Rd) ou isolées (R)
                 const cycleAnchorEvents = Object.keys(state.events)
                     .filter(date => ['R', 'Rd'].includes(state.events[date].type))
                     .sort((a, b) => new Date(a) - new Date(b));
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let combinedHistory = [];
+                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
 
                 if (cycleAnchorEvents.length < 2) {
                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
@@ -256,9 +261,8 @@
                     const starsHTML = renderStars(confidence);
                     
                     const lastRDate = new Date(cycleAnchorEvents[cycleAnchorEvents.length - 1]);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
 
+                    // Prédictions futures
                     const futurePredictions = [];
                     let currentR = new Date(lastRDate);
                     for (let i = 0; i < 4; i++) {
@@ -273,18 +277,28 @@
                         const eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
                         const eventColor = event.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
                         const daysRemaining = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
-                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${event.date.toLocaleDateString('fr-FR')}</div><div class="prediction-countdown">Dans environ ${daysRemaining} jour(s)</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
+                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${event.date.toLocaleString('fr-FR')}</div><div class="prediction-countdown">Dans environ ${daysRemaining} jour(s)</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
                     });
-                }
+                    
+                    // CORRECTION: Ajout de l'ovulation supposée du cycle EN COURS
+                    const nextPredictedRDate = new Date(lastRDate);
+                    nextPredictedRDate.setDate(nextPredictedRDate.getDate() + Math.round(avgCycle));
+                    const currentCyclePredictedODate = new Date(nextPredictedRDate);
+                    currentCyclePredictedODate.setDate(currentCyclePredictedODate.getDate() - state.settings.lutealPhase);
+                    
+                    if (currentCyclePredictedODate < today) {
+                        const dateStr = currentCyclePredictedODate.toISOString().split('T')[0];
+                        if (!state.events[dateStr]) { // Vérifier qu'il n'y a pas déjà un événement manuel
+                            combinedHistory.push({ type: 'O', date: currentCyclePredictedODate, isSupposed: true });
+                        }
+                    }
 
-                let combinedHistory = [];
-                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
-                for (let i = 0; i < cycleAnchorEvents.length; i++) {
-                    const endDate = (i + 1 < cycleAnchorEvents.length) ? new Date(cycleAnchorEvents[i+1]) : null;
-                    if(endDate) {
-                        let supposedODate = new Date(endDate);
+                    // Ajout des ovulations supposées des cycles COMPLÉTÉS
+                    for (let i = 1; i < cycleAnchorEvents.length; i++) {
+                        let supposedODate = new Date(cycleAnchorEvents[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
-                        if (!state.events[supposedODate.toISOString().split('T')[0]]) {
+                        const dateStr = supposedODate.toISOString().split('T')[0];
+                        if (!state.events[dateStr]) {
                              combinedHistory.push({ type: 'O', date: supposedODate, isSupposed: true });
                         }
                     }
@@ -413,7 +427,6 @@
                     } else alert("Code invalide.");
                 });
                 $('#start-onboarding-btn').addEventListener('click', () => {
-                    // Les dates initiales sont considérées comme des DÉBUTS de règles
                     ['2025-09-07', '2025-10-01', '2025-10-27'].forEach(date => { state.events[date] = { type: 'Rd', note: 'Import initial' }; });
                     saveData();
                     $('#onboarding-modal').classList.add('hidden');
@@ -427,3 +440,4 @@
 
 </body>
 </html>
+```

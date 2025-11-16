@@ -57,26 +57,20 @@
             word-wrap: break-word; word-break: break-all;
         }
         .calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background-color: #ccc; }
-        .calc-keys button {
-            background-color: var(--number-bg); border: none; font-size: 1.5em;
-            padding: 20px 0; cursor: pointer; transition: background-color 0.2s;
-        }
-        .calc-keys button:active { background-color: #c0c0c0; }
+        .calc-keys button { background-color: var(--number-bg); border: none; font-size: 1.5em; padding: 20px 0; cursor: pointer; }
         .calc-keys .operator { background-color: var(--operator-bg); color: white; }
         .calc-keys .special { background-color: var(--special-bg); }
 
         #tracker-app { display: flex; flex-direction: column; height: 100%; }
-        header { 
-            padding: 15px; display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid #eee;
-        }
+        header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         header h1 { font-size: 1.5em; }
         #lock-btn { background: none; border: none; font-size: 1.5em; cursor: pointer; }
         nav { display: flex; justify-content: space-around; background: #f9f9f9; padding: 10px 0; }
-        nav button { background: none; border: none; font-size: 1em; cursor: pointer; color: #777; padding: 5px 10px;}
+        nav button { background: none; border: none; font-size: 0.9em; cursor: pointer; color: #777; padding: 5px 10px;}
         nav button.active { color: var(--primary-color); font-weight: bold; border-bottom: 2px solid var(--primary-color); }
         .content-view { flex: 1; overflow-y: auto; padding: 15px; }
 
+        /* Vues */
         .predictions-container { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
         .prediction-card { background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center; }
         .prediction-card h4 { font-size: 1em; color: #555; margin-bottom: 5px; }
@@ -89,16 +83,14 @@
         .dashboard-card h3 { margin-bottom: 10px; font-size: 1.1em; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         #history-list { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; }
         #history-list li { padding: 8px 5px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
-        #history-list li:last-child { border-bottom: none; }
         #history-list .event-r { color: var(--event-r-color); font-weight: bold; }
         #history-list .event-o { color: var(--event-o-color); font-weight: bold; }
         #history-list .event-a { color: var(--event-a-color); font-weight: bold; }
         .supposed-event { font-style: italic; color: #666; }
 
         #calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #month-year { font-size: 1.2em; font-weight: bold; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .day { padding: 8px 0; cursor: pointer; border-radius: 50%; position: relative; transition: background-color 0.2s; }
+        .day { padding: 8px 0; cursor: pointer; border-radius: 50%; position: relative; }
         .day.today { background-color: var(--primary-color); color: white; font-weight: bold;}
         .day.fertile { background-color: #e83e8c1a; border-radius: 0; }
         .event-dot { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; }
@@ -106,6 +98,18 @@
         .o-dot { background-color: var(--event-o-color); }
         .a-dot { background-color: var(--event-a-color); }
 
+        /* NOUVELLE VUE : Journal */
+        #journal-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        #journal-table th, #journal-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        #journal-table th { background-color: #f9f9f9; }
+        .check { font-weight: bold; }
+        .check.event-r { color: var(--event-r-color); }
+        .check.event-o { color: var(--event-o-color); }
+        .check.event-a { color: var(--event-a-color); }
+        
+        /* Modales et boutons */
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
+        .btn-danger { background-color: #dc3545; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 350px; text-align: center; }
         #day-modal-events { display: flex; flex-direction: column; gap: 8px; }
@@ -133,11 +137,30 @@
             <nav>
                 <button class="nav-btn active" data-view="dashboard">Tableau de bord</button>
                 <button class="nav-btn" data-view="calendar">Calendrier</button>
+                <button class="nav-btn" data-view="journal">Journal</button> <!-- NOUVEAU BOUTON -->
                 <button class="nav-btn" data-view="settings">Paramètres</button>
             </nav>
 
             <div id="dashboard-view" class="content-view"><div id="predictions-container" class="predictions-container"></div><div class="dashboard-card"><h3>Historique des événements</h3><ul id="history-list"></ul></div></div>
             <div id="calendar-view" class="content-view hidden"><div id="calendar-header"><button id="prev-month">◄</button><span id="month-year"></span><button id="next-month">►</button></div><div class="calendar-grid" id="day-names"></div><div class="calendar-grid" id="calendar-days"></div></div>
+            
+            <!-- NOUVELLE VUE JOURNAL -->
+            <div id="journal-view" class="content-view hidden">
+                <table id="journal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>A</th>
+                            <th>R</th>
+                            <th>O</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Les lignes seront injectées ici -->
+                    </tbody>
+                </table>
+            </div>
+
             <div id="settings-view" class="content-view hidden"><div class="settings-group"><label for="luteal-phase-duration">Durée phase post-signal (jours)</label><input type="number" id="luteal-phase-duration" value="14" min="10" max="20"></div><button id="save-settings-btn" class="btn">Enregistrer</button><hr style="margin: 20px 0; border: 1px solid #eee;"><div class="settings-group"><h3>Exporter / Sauvegarder</h3><textarea id="export-data-field" readonly rows="4"></textarea><button id="export-btn" class="btn">Générer le code</button></div><div class="settings-group"><h3>Importer une Sauvegarde</h3><textarea id="import-data-field" rows="4"></textarea><button id="import-btn" class="btn">Importer</button></div><hr style="margin: 20px 0; border: 1px solid #eee;"><button id="reset-app-btn" class="btn btn-danger">Réinitialiser</button></div>
         </div>
     </div>
@@ -167,8 +190,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v8';
-            const PIN_KEY = 'discreetAppPin_v8';
+            const APP_DATA_KEY = 'discreetAppData_v9';
+            const PIN_KEY = 'discreetAppPin_v9';
             let inactivityTimer;
 
             let state = {
@@ -197,7 +220,7 @@
             const resetInactivityTimer = () => startInactivityTimer();
             
             const navigateTo = (viewName) => {
-                const titles = { dashboard: 'Tableau de bord', calendar: 'Calendrier', settings: 'Paramètres' };
+                const titles = { dashboard: 'Tableau de bord', calendar: 'Calendrier', journal: 'Journal', settings: 'Paramètres' };
                 $('header h1').textContent = titles[viewName];
                 $$('.content-view').forEach(v => v.classList.add('hidden'));
                 $(`#${viewName}-view`).classList.remove('hidden');
@@ -205,6 +228,7 @@
                 $(`.nav-btn[data-view="${viewName}"]`).classList.add('active');
                 if (viewName === 'dashboard') renderDashboard();
                 if (viewName === 'calendar') renderCalendar();
+                if (viewName === 'journal') renderJournalView();
             };
             
             const getStandardDeviation = (arr) => {
@@ -252,14 +276,11 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                let combinedHistory = [];
-                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
-
                 const predictionData = getPredictionData();
                 if (!predictionData) {
                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
                 } else {
-                    const { avgCycle, lastRDate, confidence, cycleAnchorEvents } = predictionData;
+                    const { avgCycle, lastRDate, confidence } = predictionData;
                     const starsHTML = renderStars(confidence);
                     
                     const futurePredictions = [];
@@ -298,16 +319,20 @@
 
                         predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div>${fertileWindowHTML}</div>`;
                     });
-                    
-                    const allCycleStarts = [...cycleAnchorEvents, new Date(lastRDate.setDate(lastRDate.getDate() + Math.round(avgCycle))).toISOString().split('T')[0]];
+                }
+                
+                let combinedHistory = [];
+                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
+                
+                const cycleAnchorEvents = Object.keys(state.events).filter(date => ['R', 'Rd'].includes(state.events[date].type)).sort((a, b) => new Date(a) - new Date(b));
+                if(predictionData) {
+                    const allCycleStarts = [...cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
                     for (let i = 1; i < allCycleStarts.length; i++) {
                         let supposedODate = new Date(allCycleStarts[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
                         if (supposedODate < today) {
                              const dateStr = supposedODate.toISOString().split('T')[0];
-                             if (!state.events[dateStr]) {
-                                 combinedHistory.push({ type: 'O', date: supposedODate, isSupposed: true });
-                             }
+                             if (!state.events[dateStr]) combinedHistory.push({ type: 'O', date: supposedODate, isSupposed: true });
                         }
                     }
                 }
@@ -315,7 +340,7 @@
                 combinedHistory.sort((a, b) => b.date - a.date);
                 if (combinedHistory.length > 0) {
                     const nameMap = { R: 'Mode R', Rd: 'Mode R (Début)', Rf: 'Mode R (Fin)', O: 'Mode O', A: 'Mode A' };
-                    historyList.innerHTML = combinedHistory.map(item => {
+                    historyList.innerHTML = combinedHistory.slice(0, 10).map(item => { // Affiche les 10 derniers
                         const eventName = nameMap[item.type] || 'Événement';
                         const eventClass = ['R', 'Rd', 'Rf'].includes(item.type) ? 'event-r' : (item.type === 'O' ? 'event-o' : 'event-a');
                         return `<li><span>${item.date.toLocaleDateString('fr-FR')}</span><strong class="${eventClass} ${item.isSupposed ? 'supposed-event' : ''}">${eventName} ${item.isSupposed ? '*' : ''}</strong></li>`;
@@ -323,6 +348,58 @@
                 } else {
                     historyList.innerHTML = '<li>Aucun événement enregistré.</li>';
                 }
+            };
+            
+            // NOUVELLE FONCTION POUR LA VUE JOURNAL
+            const renderJournalView = () => {
+                const tableBody = $('#journal-table tbody');
+                tableBody.innerHTML = '';
+
+                let logData = {};
+
+                // 1. Collecter tous les événements
+                for (const dateStr in state.events) {
+                    if (!logData[dateStr]) logData[dateStr] = [];
+                    logData[dateStr].push(state.events[dateStr].type);
+                }
+
+                const predictionData = getPredictionData();
+                if (predictionData) {
+                     const allCycleStarts = [...predictionData.cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
+                    for (let i = 1; i < allCycleStarts.length; i++) {
+                        let supposedODate = new Date(allCycleStarts[i]);
+                        supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
+                        if (supposedODate < new Date()) { // Inclure toutes les dates passées
+                             const dateStr = supposedODate.toISOString().split('T')[0];
+                             if (!logData[dateStr] || !logData[dateStr].includes('O')) {
+                                if (!logData[dateStr]) logData[dateStr] = [];
+                                logData[dateStr].push('O*');
+                             }
+                        }
+                    }
+                }
+                
+                // 2. Filtrer, trier et afficher
+                const startDate = new Date('2025-05-01');
+                const sortedDates = Object.keys(logData)
+                    .filter(dateStr => new Date(dateStr) >= startDate)
+                    .sort((a, b) => new Date(b) - new Date(a));
+
+                sortedDates.forEach(dateStr => {
+                    const events = logData[dateStr];
+                    const hasA = events.includes('A');
+                    const hasR = events.includes('R') || events.includes('Rd') || events.includes('Rf');
+                    const hasO = events.includes('O') || events.includes('O*');
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR')}</td>
+                            <td>${hasA ? '<span class="check event-a">✓</span>' : ''}</td>
+                            <td>${hasR ? '<span class="check event-r">✓</span>' : ''}</td>
+                            <td>${hasO ? '<span class="check event-o">✓</span>' : ''}</td>
+                        </tr>
+                    `;
+                });
             };
 
             const renderCalendar = () => {
@@ -452,27 +529,19 @@
                     } else alert("Code invalide.");
                 });
                 
-                // --- NOUVELLE LOGIQUE D'INITIALISATION AVEC HISTORIQUE COMPLET ---
                 $('#start-onboarding-btn').addEventListener('click', () => {
-                    const initialHistory = [
-                        { date: '2025-07-28', type: 'A' },
-                        { date: '2025-08-18', type: 'A' },
-                        { date: '2025-08-23', type: 'A' },
-                        { date: '2025-08-27', type: 'A' },
-                        { date: '2025-09-07', type: 'Rd' }, // Début des règles
-                        { date: '2025-09-10', type: 'A' },
-                        { date: '2025-09-30', type: 'A' },
-                        { date: '2025-10-01', type: 'Rd' }, // Début des règles
-                        { date: '2025-10-04', type: 'A' },
-                        { date: '2025-10-15', type: 'A' },
-                        { date: '2025-10-27', type: 'Rd' }, // Début des règles
-                        { date: '2025-10-28', type: 'A' },
-                        { date: '2025-11-03', type: 'A' }
-                    ];
+                    const initialHistory = {
+                        '2025-09-07': { type: 'Rd' }, '2025-10-01': { type: 'Rd' }, '2025-10-27': { type: 'Rd' },
+                        '2025-07-28': { type: 'A' }, '2025-08-18': { type: 'A' }, '2025-08-23': { type: 'A' },
+                        '2025-08-27': { type: 'A' }, '2025-09-10': { type: 'A' }, '2025-09-30': { type: 'A' },
+                        '2025-10-04': { type: 'A' }, '2025-10-15': { type: 'A' }, '2025-10-28': { type: 'A' },
+                        '2025-11-03': { type: 'A' }
+                    };
                     
-                    initialHistory.forEach(item => {
-                        state.events[item.date] = { type: item.type, note: 'Import initial' };
-                    });
+                    for(const date in initialHistory){
+                        // Permet de fusionner les événements si une date a plusieurs types (ex: A et Rd)
+                        state.events[date] = { ...state.events[date], ...initialHistory[date], note: 'Import initial' };
+                    }
                     
                     saveData();
                     $('#onboarding-modal').classList.add('hidden');

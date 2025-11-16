@@ -76,7 +76,7 @@
         .prediction-date { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .prediction-countdown { font-size: 0.9em; color: #777; margin-bottom: 10px; }
         .confidence-stars { font-size: 1.2em; color: var(--star-color); }
-        
+
         .dashboard-card { background: #f9f9f9; padding: 15px; border-radius: 8px; }
         .dashboard-card h3 { margin-bottom: 10px; font-size: 1.1em; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         #history-list { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; }
@@ -170,10 +170,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v11';
-            const PIN_KEY = 'discreetAppPin_v11';
+            const APP_DATA_KEY = 'discreetAppData_v12';
+            const PIN_KEY = 'discreetAppPin_v12';
             let inactivityTimer;
 
+            // NOUVELLE STRUCTURE DE DONNÉES : `events` contient des objets { types: [], note: "" }
             let state = {
                 currentDate: new Date(),
                 events: {},
@@ -210,7 +211,7 @@
                 if (viewName === 'calendar') renderCalendar();
                 if (viewName === 'journal') renderJournalView();
             };
-            
+
             const getStandardDeviation = (arr) => {
                 if (arr.length < 2) return 0;
                 const mean = arr.reduce((a, b) => a + b) / arr.length;
@@ -253,8 +254,7 @@
                 predictionsContainer.innerHTML = '';
                 historyList.innerHTML = '';
                 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+                const today = new Date(); today.setHours(0, 0, 0, 0);
 
                 const predictionData = getPredictionData();
                 if (!predictionData) {
@@ -291,9 +291,7 @@
                 }
                 
                 let combinedHistory = [];
-                for (const dateStr in state.events) {
-                    combinedHistory.push({ types: state.events[dateStr].types, date: new Date(dateStr), isSupposed: false });
-                }
+                for (const dateStr in state.events) combinedHistory.push({ types: state.events[dateStr].types, date: new Date(dateStr), isSupposed: false });
                 
                 if(predictionData) {
                     const allCycleStarts = [...predictionData.cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
@@ -302,16 +300,14 @@
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
                         if (supposedODate < today) {
                              const dateStr = supposedODate.toISOString().split('T')[0];
-                             if (!state.events[dateStr] || !state.events[dateStr].types.includes('O')) {
-                                combinedHistory.push({ types: ['O'], date: supposedODate, isSupposed: true });
-                             }
+                             if (!state.events[dateStr] || !state.events[dateStr].types.includes('O')) combinedHistory.push({ types: ['O'], date: supposedODate, isSupposed: true });
                         }
                     }
                 }
 
                 combinedHistory.sort((a, b) => b.date - a.date);
                 if (combinedHistory.length > 0) {
-                    const nameMap = { R: 'Mode R', Rd: 'Mode R (Début)', Rf: 'Mode R (Fin)', O: 'Mode O', A: 'Mode A' };
+                    const nameMap = { R: 'R', Rd: 'R (Début)', Rf: 'R (Fin)', O: 'O', A: 'A' };
                     historyList.innerHTML = combinedHistory.slice(0, 10).map(item => {
                         const eventName = item.types.map(t => nameMap[t] || t).join(', ');
                         const primaryType = item.types.find(t => ['R','Rd','Rf'].includes(t)) ? 'r' : item.types.includes('O') ? 'o' : 'a';
@@ -327,9 +323,7 @@
                 tableBody.innerHTML = '';
                 let logData = {};
 
-                for (const dateStr in state.events) {
-                    logData[dateStr] = [...state.events[dateStr].types];
-                }
+                for (const dateStr in state.events) logData[dateStr] = [...state.events[dateStr].types];
 
                 const predictionData = getPredictionData();
                 if (predictionData) {
@@ -371,7 +365,7 @@
                     if (hasA) {
                         const isNearR = allRDates.some(rDate => Math.abs((currentDate - rDate) / 86400000) <= 2);
                         const isNearO = allODates.some(oDate => Math.abs((currentDate - oDate) / 86400000) <= 2);
-                        if (isNearR) cellStyle = 'background-color: #ffecb3;'; // Jaune plus visible
+                        if (isNearR) cellStyle = 'background-color: #ffecb3;'; // Jaune visible
                         if (isNearO) cellStyle = 'background-color: #add8e6;'; // Bleu ciel (prioritaire)
                     }
 
@@ -395,8 +389,7 @@
                      fertileWindow.start = start;
                 }
                 
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const dayOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+                const dayOffset = (new Date(year, month, 1).getDay() + 6) % 7;
 
                 if (!$('#day-names').innerHTML) ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(d => $('#day-names').innerHTML += `<div class="day-name">${d}</div>`);
                 for (let i = 0; i < dayOffset; i++) calendarDays.innerHTML += `<div class="day empty" style="visibility:hidden"></div>`;
@@ -406,9 +399,7 @@
                     const date = new Date(year, month, day);
                     const dateStr = date.toISOString().split('T')[0];
                     const dayEl = document.createElement('div');
-                    dayEl.className = 'day';
-                    dayEl.textContent = day;
-                    dayEl.dataset.date = dateStr;
+                    dayEl.className = 'day'; dayEl.textContent = day; dayEl.dataset.date = dateStr;
 
                     if (date.toDateString() === today.toDateString()) dayEl.classList.add('today');
                     if (fertileWindow.start && date >= fertileWindow.start && date <= fertileWindow.end) dayEl.classList.add('fertile');
@@ -434,17 +425,32 @@
                 $('#day-modal').classList.remove('hidden');
             };
             const closeDayModal = () => $('#day-modal').classList.add('hidden');
+            
+            // CORRECTION : RAFRAÎCHIR LA VUE ACTIVE APRÈS CHAQUE MODIFICATION
+            const refreshActiveView = () => {
+                const currentView = $('.nav-btn.active')?.dataset.view || 'dashboard';
+                navigateTo(currentView);
+            };
+
             const saveDayData = (type) => {
                 if (!state.events[selectedDateStr]) state.events[selectedDateStr] = { types: [], note: '' };
                 if (!state.events[selectedDateStr].types.includes(type)) state.events[selectedDateStr].types.push(type);
                 saveData();
-                renderCalendar();
+                refreshActiveView();
             };
             const saveNoteOnly = () => {
                 const note = $('#day-modal-note').value;
                 if (!state.events[selectedDateStr] && note.trim()) state.events[selectedDateStr] = { types: [], note: '' };
                 if(state.events[selectedDateStr]) state.events[selectedDateStr].note = note;
                 saveData();
+                refreshActiveView();
+            };
+            const removeDayEvents = () => {
+                if (state.events[selectedDateStr]) {
+                    delete state.events[selectedDateStr];
+                    saveData();
+                    refreshActiveView();
+                }
             };
 
             const init = () => {
@@ -460,7 +466,7 @@
                 $('#add-rf-event').addEventListener('click', () => { saveDayData('Rf'); closeDayModal(); });
                 $('#add-o-event').addEventListener('click', () => { saveDayData('O'); closeDayModal(); });
                 $('#add-a-event').addEventListener('click', () => { saveDayData('A'); closeDayModal(); });
-                $('#remove-event').addEventListener('click', () => { delete state.events[selectedDateStr]; saveData(); renderCalendar(); closeDayModal(); });
+                $('#remove-event').addEventListener('click', () => { removeDayEvents(); closeDayModal(); });
                 $('#save-note-btn').addEventListener('click', () => { saveNoteOnly(); closeDayModal(); });
                 $('#close-day-modal-btn').addEventListener('click', closeDayModal);
 
@@ -500,15 +506,14 @@
                 
                 $('#start-onboarding-btn').addEventListener('click', () => {
                     const initialHistory = {
-                        '2025-09-07': 'Rd', '2025-10-01': 'Rd', '2025-10-27': 'Rd',
-                        '2025-07-28': 'A', '2025-08-18': 'A', '2025-08-23': 'A',
-                        '2025-08-27': 'A', '2025-09-10': 'A', '2025-09-30': 'A',
-                        '2025-10-04': 'A', '2025-10-15': 'A', '2025-10-28': 'A',
-                        '2025-11-03': 'A'
+                        '2025-09-07': ['Rd','A'], '2025-10-01': ['Rd','A'], '2025-10-27': ['Rd'],
+                        '2025-07-28': ['A'], '2025-08-18': ['A'], '2025-08-23': ['A'],
+                        '2025-08-27': ['A'], '2025-09-10': ['A'], '2025-09-30': ['A'],
+                        '2025-10-04': ['A'], '2025-10-15': ['A'], '2025-10-28': ['A'],
+                        '2025-11-03': ['A']
                     };
                     for(const date in initialHistory){
-                        if (!state.events[date]) state.events[date] = { types: [], note: 'Import initial' };
-                        state.events[date].types.push(initialHistory[date]);
+                        state.events[date] = { types: initialHistory[date], note: 'Import initial' };
                     }
                     saveData();
                     $('#onboarding-modal').classList.add('hidden');

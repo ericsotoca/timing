@@ -253,7 +253,6 @@
 
             const getPredictionData = () => {
                 const cycleAnchorEvents = Object.keys(state.events)
-                    // CORRECTION : Le calcul se base uniquement sur 'Rd' pour plus de précision
                     .filter(date => state.events[date] && state.events[date].types.includes('Rd'))
                     .sort((a, b) => new Date(a) - new Date(b));
 
@@ -288,13 +287,19 @@
                     const starsHTML = renderStars(confidence);
                     
                     const futurePredictions = [];
-                    let currentR = new Date(lastRDate);
-                    for (let i = 0; i < 4; i++) {
-                        currentR.setDate(currentR.getDate() + Math.round(avgCycle));
-                        let predictedO = new Date(currentR);
+                    const lastRDateObj = new Date(lastRDate);
+
+                    // CORRECTION: La boucle calcule maintenant chaque prédiction à partir de la dernière date réelle,
+                    // et non à partir de la prédiction précédente.
+                    for (let i = 1; i <= 4; i++) {
+                        let predictedR = new Date(lastRDateObj);
+                        predictedR.setDate(predictedR.getDate() + Math.round(avgCycle * i));
+
+                        let predictedO = new Date(predictedR);
                         predictedO.setDate(predictedO.getDate() - state.settings.lutealPhase);
-                        if (currentR >= today) futurePredictions.push({ type: 'R', date: new Date(currentR) });
-                        if (predictedO >= today) futurePredictions.push({ type: 'O', date: new Date(predictedO) });
+
+                        if (predictedR >= today) futurePredictions.push({ type: 'R', date: predictedR });
+                        if (predictedO >= today) futurePredictions.push({ type: 'O', date: predictedO });
                     }
 
                     futurePredictions.sort((a, b) => a.date - b.date).slice(0, 2).forEach(event => {
@@ -431,7 +436,6 @@
                     const typesToRemove = eventType === 'R' ? rTypes : [eventType];
                     state.events[dateStr].types = eventTypes.filter(t => !typesToRemove.includes(t));
                 } else {
-                     // Pour 'R', on ajoute 'Rd' par défaut pour marquer le début du cycle
                     eventTypes.push(eventType === 'R' ? 'Rd' : eventType);
                 }
 
@@ -457,7 +461,6 @@
                 }
             };
             
-            // NOUVELLE FONCTION pour ajouter les pics
             const addPeakDates = () => {
                 const predictionData = getPredictionData();
                 if (!predictionData) {
@@ -478,7 +481,6 @@
                     const dd = String(supposedODate.getDate()).padStart(2, '0');
                     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-                    // Ajouter 'O' si aucun événement 'O' n'existe déjà pour ce jour
                     if (!state.events[dateStr] || !state.events[dateStr].types.includes('O')) {
                         if (!state.events[dateStr]) {
                             state.events[dateStr] = { types: ['O'], note: 'Pic ajouté auto.' };

@@ -21,6 +21,7 @@
             --event-r-color: #007bff;
             --event-o-color: #ff9800;
             --event-a-color: #e83e8c;
+            --event-v-color: #6c757d;
             --star-color: #f39c12;
             --btn-secondary-bg: #6c757d;
         }
@@ -70,32 +71,18 @@
         nav button.active { color: var(--primary-color); font-weight: bold; border-bottom: 2px solid var(--primary-color); }
         .content-view { flex: 1; overflow-y: auto; padding: 15px; }
 
-        .predictions-container { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
-        .prediction-card { background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center; }
-        .prediction-card h4 { font-size: 1em; color: #555; margin-bottom: 5px; }
-        .prediction-date { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
-        .prediction-countdown { font-size: 0.9em; color: #777; margin-bottom: 10px; }
-        .confidence-stars { font-size: 1.2em; color: var(--star-color); }
-
-        .dashboard-card { background: #f9f9f9; padding: 15px; border-radius: 8px; }
-        .dashboard-card h3 { margin-bottom: 10px; font-size: 1.1em; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
-        #history-list { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; }
-        #history-list li { padding: 8px 5px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
-        #history-list .event-r { color: var(--event-r-color); font-weight: bold; }
-        #history-list .event-o { color: var(--event-o-color); font-weight: bold; }
-        #history-list .event-a { color: var(--event-a-color); font-weight: bold; }
-        .supposed-event { font-style: italic; color: #666; }
-
         #calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
         .day { padding: 8px 0; cursor: pointer; border-radius: 50%; position: relative; }
         .day.today { background-color: var(--primary-color); color: white; font-weight: bold;}
         .day.fertile { background-color: #e83e8c1a; border-radius: 0; }
+        .day.voyage { text-decoration: line-through; color: #aaa; background-color: #f0f0f0; }
         .dots-container { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
         .dot { width: 5px; height: 5px; border-radius: 50%; }
         .r-dot { background-color: var(--event-r-color); }
         .o-dot { background-color: var(--event-o-color); }
         .a-dot { background-color: var(--event-a-color); }
+        .v-dot { background-color: var(--event-v-color); }
 
         #journal-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
         #journal-table th, #journal-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
@@ -106,6 +93,7 @@
         .check.event-r { color: var(--event-r-color); }
         .check.event-o { color: var(--event-o-color); }
         .check.event-a { color: var(--event-a-color); }
+        .check.event-v { color: var(--event-v-color); }
         
         .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
         .btn-danger { background-color: #dc3545; }
@@ -132,22 +120,15 @@
         </div>
 
         <div id="tracker-app" class="hidden">
-            <header><h1>Tableau de bord</h1><button id="lock-btn">🔒</button></header>
+            <header><h1>Journal</h1><button id="lock-btn">🔒</button></header>
             <nav>
-                <button class="nav-btn active" data-view="dashboard">Tableau de bord</button>
+                <button class="nav-btn active" data-view="journal">Journal</button>
                 <button class="nav-btn" data-view="calendar">Calendrier</button>
-                <button class="nav-btn" data-view="journal">Journal</button>
                 <button class="nav-btn" data-view="settings">Paramètres</button>
             </nav>
-
-            <div id="dashboard-view" class="content-view">
-                <div class="dashboard-actions" style="text-align: center; margin-bottom: 15px;">
-                     <button id="refresh-dashboard-btn" class="btn" style="width: auto; padding: 10px 20px;">🔄 Actualiser les calculs</button>
-                </div>
-                <div id="predictions-container" class="predictions-container"></div>
-            </div>
+            
+            <div id="journal-view" class="content-view"><table id="journal-table"><thead><tr><th>Date</th><th>A</th><th>R</th><th>O</th><th>V</th></tr></thead><tbody></tbody></table></div>
             <div id="calendar-view" class="content-view hidden"><div id="calendar-header"><button id="prev-month">◄</button><span id="month-year"></span><button id="next-month">►</button></div><div class="calendar-grid" id="day-names"></div><div class="calendar-grid" id="calendar-days"></div></div>
-            <div id="journal-view" class="content-view hidden"><table id="journal-table"><thead><tr><th>Date</th><th>A</th><th>R</th><th>O</th></tr></thead><tbody></tbody></table></div>
             <div id="settings-view" class="content-view hidden">
                 <div class="settings-group">
                     <label for="luteal-phase-duration">Durée phase post-signal (jours)</label>
@@ -190,6 +171,7 @@
                  <button id="add-r-event" class="btn" style="background-color: var(--btn-secondary-bg);">Mode R (isolé)</button>
                  <button id="add-o-event" class="btn" style="background-color: var(--event-o-color);">Mode O</button>
                  <button id="add-a-event" class="btn" style="background-color: var(--event-a-color);">Ajouter Mode A</button>
+                 <button id="add-v-event" class="btn" style="background-color: var(--event-v-color);">Ajouter Mode V</button>
                  <button id="remove-event" class="btn btn-danger">Supprimer les événements</button>
             </div>
             <textarea id="day-modal-note" placeholder="Ajouter une note..."></textarea>
@@ -226,36 +208,21 @@
             };
 
             const lockApp = () => { $('#tracker-app').classList.add('hidden'); $('#calculator-app').classList.remove('hidden'); $('#calc-display').textContent = '0'; clearTimeout(inactivityTimer); };
-            const unlockApp = () => { $('#calculator-app').classList.add('hidden'); $('#tracker-app').classList.remove('hidden'); navigateTo('dashboard'); startInactivityTimer(); };
+            const unlockApp = () => { $('#calculator-app').classList.add('hidden'); $('#tracker-app').classList.remove('hidden'); navigateTo('journal'); startInactivityTimer(); };
             const startInactivityTimer = () => { clearTimeout(inactivityTimer); inactivityTimer = setTimeout(lockApp, 5 * 60 * 1000); };
             const resetInactivityTimer = () => startInactivityTimer();
             
             const navigateTo = (viewName) => {
-                const titles = { dashboard: 'Tableau de bord', calendar: 'Calendrier', journal: 'Journal', settings: 'Paramètres' };
+                const titles = { journal: 'Journal', calendar: 'Calendrier', settings: 'Paramètres' };
                 $('header h1').textContent = titles[viewName];
                 $$('.content-view').forEach(v => v.classList.add('hidden'));
                 $(`#${viewName}-view`).classList.remove('hidden');
                 $$('.nav-btn').forEach(b => b.classList.remove('active'));
                 $(`.nav-btn[data-view="${viewName}"]`).classList.add('active');
-                if (viewName === 'dashboard') renderDashboard();
                 if (viewName === 'calendar') renderCalendar();
                 if (viewName === 'journal') renderJournalView();
             };
             
-            const getStandardDeviation = (arr) => {
-                if (arr.length < 2) return 0;
-                const mean = arr.reduce((a, b) => a + b) / arr.length;
-                return Math.sqrt(arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / arr.length);
-            };
-
-            const calculateConfidence = (cycleCount, stdDev) => {
-                let dataScore = (cycleCount >= 6) ? 2.5 : (cycleCount >= 4) ? 2 : (cycleCount >= 3) ? 1.5 : (cycleCount >= 2) ? 1 : 0.5;
-                let consistencyScore = (stdDev <= 1.5) ? 2.5 : (stdDev <= 3) ? 2 : (stdDev <= 5) ? 1.5 : (stdDev <= 7) ? 1 : 0.5;
-                return Math.max(1, dataScore + consistencyScore);
-            };
-
-            const renderStars = (score) => '★'.repeat(Math.round(score)) + '☆'.repeat(5 - Math.round(score));
-
             const getPredictionData = () => {
                 const cycleAnchorEvents = Object.keys(state.events)
                     .filter(date => state.events[date] && state.events[date].types.includes('Rd'))
@@ -273,109 +240,7 @@
                 return {
                     avgCycle,
                     lastRDate: new Date(cycleAnchorEvents[cycleAnchorEvents.length - 1]),
-                    confidence: calculateConfidence(cycleLengths.length, getStandardDeviation(cycleLengths)),
-                    cycleAnchorEvents: cycleAnchorEvents
                 };
-            };
-
-            const renderDashboard = () => {
-                const predictionsContainer = $('#predictions-container');
-                predictionsContainer.innerHTML = '';
-                
-                const today = new Date(); 
-                today.setHours(0, 0, 0, 0);
-
-                let allFutureEvents = [];
-
-                // Étape 1 : Récupérer les événements manuels futurs
-                for (const dateStr in state.events) {
-                    const eventDate = new Date(dateStr + 'T00:00:00');
-                    if (eventDate >= today) {
-                        if (state.events[dateStr].types.some(t => ['R', 'Rd', 'Rf'].includes(t))) {
-                            allFutureEvents.push({ type: 'R', date: eventDate, isManual: true });
-                        }
-                        if (state.events[dateStr].types.includes('O')) {
-                            allFutureEvents.push({ type: 'O', date: eventDate, isManual: true });
-                        }
-                    }
-                }
-
-                // Étape 2 : Calculer les prédictions
-                const predictionData = getPredictionData();
-                if (predictionData) {
-                    const { avgCycle, lastRDate, confidence, starsHTML } = predictionData;
-                    const lastRDateObj = new Date(lastRDate);
-                    
-                    for (let i = 1; i <= 4; i++) {
-                        let predictedR = new Date(lastRDateObj);
-                        predictedR.setDate(predictedR.getDate() + Math.round(avgCycle * i));
-
-                        let predictedO = new Date(predictedR);
-                        predictedO.setDate(predictedO.getDate() - state.settings.lutealPhase);
-
-                        if (predictedR >= today) allFutureEvents.push({ type: 'R', date: predictedR, isManual: false, confidence, starsHTML: renderStars(confidence) });
-                        if (predictedO >= today) allFutureEvents.push({ type: 'O', date: predictedO, isManual: false, confidence, starsHTML: renderStars(confidence) });
-                    }
-                }
-
-                allFutureEvents.sort((a, b) => a.date - b.date);
-
-                // --- NOUVELLE LOGIQUE DE CORRECTION ---
-                const nextR = allFutureEvents.find(e => e.type === 'R');
-                let nextO = allFutureEvents.find(e => e.type === 'O');
-                
-                if (nextR && nextO && nextO.date > nextR.date) {
-                    let potentialODate = new Date(nextR.date);
-                    potentialODate.setDate(potentialODate.getDate() - state.settings.lutealPhase);
-                    
-                    if (potentialODate < today) {
-                        nextO = null; 
-                    } else {
-                        nextO = {
-                            type: 'O',
-                            date: potentialODate,
-                            isManual: false,
-                            confidence: predictionData ? predictionData.confidence : 0,
-                            starsHTML: predictionData ? renderStars(predictionData.confidence) : renderStars(0)
-                        };
-                    }
-                }
-
-                let finalEventsToShow = [];
-                if (nextR) finalEventsToShow.push(nextR);
-                if (nextO) finalEventsToShow.push(nextO);
-
-                finalEventsToShow.sort((a, b) => a.date - b.date);
-                
-                // Étape 3 : Afficher les événements corrigés
-                if (finalEventsToShow.length > 0) {
-                    finalEventsToShow.forEach(event => {
-                        let eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
-                        if (event.isManual) {
-                            eventName += ' (manuel)';
-                        }
-
-                        const eventColor = event.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
-                        const dateString = event.date.toLocaleDateString('fr-FR');
-                        
-                        const daysToStart = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
-                        let countdownText = `Commence dans ${daysToStart} jours`;
-                        if (daysToStart === 1) countdownText = `Commence demain`;
-                        else if (daysToStart === 0) countdownText = `Commence aujourd'hui`;
-
-                        predictionsContainer.innerHTML += `
-                            <div class="prediction-card">
-                                <h4>${eventName}</h4>
-                                <div class="prediction-date" style="color: ${eventColor}">${dateString}</div>
-                                <div class="prediction-countdown">${countdownText}</div>
-                                ${!event.isManual ? `<div class="confidence-stars" title="Indice de confiance : ${event.confidence.toFixed(1)}/5">${event.starsHTML}</div>` : ''}
-                            </div>`;
-                    });
-                } else if (!predictionData) {
-                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
-                } else {
-                    predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Aucun événement futur proche, manuel ou prédit.</p>`;
-                }
             };
             
             const renderJournalView = () => {
@@ -389,17 +254,15 @@
                     }
                 }
                 
-                const startDate = new Date('2025-05-01');
-                const sortedDates = Object.keys(logData)
-                    .filter(dateStr => new Date(dateStr) >= startDate)
-                    .sort((a, b) => new Date(b) - new Date(a));
+                const allDates = Object.keys(logData).sort((a, b) => new Date(b) - new Date(a));
 
-                sortedDates.forEach(dateStr => {
+                allDates.forEach(dateStr => {
                     const events = logData[dateStr] || [];
                     const currentDate = new Date(dateStr + 'T00:00:00');
                     const hasA = events.includes('A');
                     const hasR = events.some(type => ['R', 'Rd', 'Rf'].includes(type));
                     const hasO = events.includes('O');
+                    const hasV = events.includes('V');
 
                     tableBody.innerHTML += `
                         <tr>
@@ -407,6 +270,7 @@
                             <td class="event-cell" data-date="${dateStr}" data-event-type="A">${hasA ? '<span class="check event-a">✓</span>' : ''}</td>
                             <td class="event-cell" data-date="${dateStr}" data-event-type="R">${hasR ? '<span class="check event-r">✓</span>' : ''}</td>
                             <td class="event-cell" data-date="${dateStr}" data-event-type="O">${hasO ? '<span class="check event-o">✓</span>' : ''}</td>
+                            <td class="event-cell" data-date="${dateStr}" data-event-type="V">${hasV ? '<span class="check event-v">✓</span>' : ''}</td>
                         </tr>`;
                 });
             };
@@ -453,6 +317,10 @@
                         if (state.events[dateStr].types.some(t => ['R','Rd','Rf'].includes(t))) dotsContainer.innerHTML += '<div class="dot r-dot"></div>';
                         if (state.events[dateStr].types.includes('O')) dotsContainer.innerHTML += '<div class="dot o-dot"></div>';
                         if (state.events[dateStr].types.includes('A')) dotsContainer.innerHTML += '<div class="dot a-dot"></div>';
+                        if (state.events[dateStr].types.includes('V')) {
+                             dotsContainer.innerHTML += '<div class="dot v-dot"></div>';
+                             dayEl.classList.add('voyage');
+                        }
                         dayEl.appendChild(dotsContainer);
                     }
                     dayEl.addEventListener('click', () => openDayModal(dateStr));
@@ -470,7 +338,7 @@
             const closeDayModal = () => $('#day-modal').classList.add('hidden');
             
             const refreshActiveView = () => {
-                const currentView = $('.nav-btn.active')?.dataset.view || 'dashboard';
+                const currentView = $('.nav-btn.active')?.dataset.view || 'journal';
                 navigateTo(currentView);
             };
 
@@ -567,15 +435,6 @@
                 $('#prev-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); });
                 $('#next-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); });
                 
-                $('#refresh-dashboard-btn').addEventListener('click', () => {
-                    renderDashboard();
-                    const btn = $('#refresh-dashboard-btn');
-                    btn.textContent = 'Calculs à jour !';
-                    setTimeout(() => {
-                        btn.textContent = '🔄 Actualiser les calculs';
-                    }, 1500);
-                });
-
                 $('#add-peak-dates-btn').addEventListener('click', addPeakDates);
 
                 $('#add-r-event').addEventListener('click', () => { saveDayData('R'); closeDayModal(); });
@@ -583,6 +442,7 @@
                 $('#add-rf-event').addEventListener('click', () => { saveDayData('Rf'); closeDayModal(); });
                 $('#add-o-event').addEventListener('click', () => { saveDayData('O'); closeDayModal(); });
                 $('#add-a-event').addEventListener('click', () => { saveDayData('A'); closeDayModal(); });
+                $('#add-v-event').addEventListener('click', () => { saveDayData('V'); closeDayModal(); });
                 $('#remove-event').addEventListener('click', () => { removeDayEvents(); closeDayModal(); });
                 $('#save-note-btn').addEventListener('click', () => { saveNoteOnly(); closeDayModal(); });
                 $('#close-day-modal-btn').addEventListener('click', closeDayModal);
@@ -655,4 +515,3 @@
 
 </body>
 </html>
-

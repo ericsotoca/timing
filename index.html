@@ -170,11 +170,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v12';
-            const PIN_KEY = 'discreetAppPin_v12';
+            const APP_DATA_KEY = 'discreetAppData_v13';
+            const PIN_KEY = 'discreetAppPin_v13';
             let inactivityTimer;
 
-            // NOUVELLE STRUCTURE DE DONNÉES : `events` contient des objets { types: [], note: "" }
             let state = {
                 currentDate: new Date(),
                 events: {},
@@ -211,7 +210,7 @@
                 if (viewName === 'calendar') renderCalendar();
                 if (viewName === 'journal') renderJournalView();
             };
-
+            
             const getStandardDeviation = (arr) => {
                 if (arr.length < 2) return 0;
                 const mean = arr.reduce((a, b) => a + b) / arr.length;
@@ -426,10 +425,11 @@
             };
             const closeDayModal = () => $('#day-modal').classList.add('hidden');
             
-            // CORRECTION : RAFRAÎCHIR LA VUE ACTIVE APRÈS CHAQUE MODIFICATION
             const refreshActiveView = () => {
                 const currentView = $('.nav-btn.active')?.dataset.view || 'dashboard';
-                navigateTo(currentView);
+                if (currentView === 'dashboard') renderDashboard();
+                else if (currentView === 'calendar') renderCalendar();
+                else if (currentView === 'journal') renderJournalView();
             };
 
             const saveDayData = (type) => {
@@ -443,7 +443,6 @@
                 if (!state.events[selectedDateStr] && note.trim()) state.events[selectedDateStr] = { types: [], note: '' };
                 if(state.events[selectedDateStr]) state.events[selectedDateStr].note = note;
                 saveData();
-                refreshActiveView();
             };
             const removeDayEvents = () => {
                 if (state.events[selectedDateStr]) {
@@ -470,7 +469,7 @@
                 $('#save-note-btn').addEventListener('click', () => { saveNoteOnly(); closeDayModal(); });
                 $('#close-day-modal-btn').addEventListener('click', closeDayModal);
 
-                $('#save-settings-btn').addEventListener('click', () => { state.settings.lutealPhase = parseInt($('#luteal-phase-duration').value) || 14; saveData(); alert('Paramètres enregistrés !'); });
+                $('#save-settings-btn').addEventListener('click', () => { state.settings.lutealPhase = parseInt($('#luteal-phase-duration').value) || 14; saveData(); alert('Paramètres enregistrés !'); refreshActiveView(); });
                 $('#export-btn').addEventListener('click', () => { $('#export-data-field').value = JSON.stringify({state: state, pin: localStorage.getItem(PIN_KEY)}); alert('Code de sauvegarde généré.'); });
                 $('#import-btn').addEventListener('click', () => {
                     if(!confirm("Importer écrasera vos données. Continuer ?")) return;
@@ -506,11 +505,15 @@
                 
                 $('#start-onboarding-btn').addEventListener('click', () => {
                     const initialHistory = {
-                        '2025-09-07': ['Rd','A'], '2025-10-01': ['Rd','A'], '2025-10-27': ['Rd'],
-                        '2025-07-28': ['A'], '2025-08-18': ['A'], '2025-08-23': ['A'],
-                        '2025-08-27': ['A'], '2025-09-10': ['A'], '2025-09-30': ['A'],
-                        '2025-10-04': ['A'], '2025-10-15': ['A'], '2025-10-28': ['A'],
-                        '2025-11-03': ['A']
+                        '2025-05-13': ['A'],'2025-05-19': ['A'],'2025-05-24': ['A'],
+                        '2025-06-03': ['A'],'2025-06-06': ['A'],'2025-06-11': ['A'],'2025-06-17': ['A'],
+                        '2025-06-21': ['A', 'O'], '2025-07-20': ['A'], '2025-07-28': ['A', 'O'],
+                        '2025-08-18': ['A'],'2025-08-23': ['A'],'2025-08-27': ['A'],
+                        '2025-09-07': ['A', 'Rd'],'2025-09-10': ['A'],
+                        '2025-09-30': ['A', 'Rd'],'2025-10-01': ['R'],
+                        '2025-10-04': ['A'],'2025-10-15': ['A'],
+                        '2025-10-27': ['A', 'Rd'],'2025-10-28': ['A', 'R'],
+                        '2025-11-03': ['A'],'2025-11-04': ['A'],'2025-11-11': ['A']
                     };
                     for(const date in initialHistory){
                         state.events[date] = { types: initialHistory[date], note: 'Import initial' };
@@ -527,4 +530,3 @@
 
 </body>
 </html>
-```

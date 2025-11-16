@@ -12,12 +12,11 @@
       Ceci permet à l'application d'être "installable" sur un téléphone 
       sans avoir besoin d'un fichier manifest.json séparé.
     -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sb3IiOiAiI2ZlZmVmZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNhbGN1bGF0cmljZSIsCiAgInNob3J0X25hbWUiOiAiQ2FsYyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmVmZWZlIiwKICAidGhlbWVfY29sovIiOiAiI2ZlZmVmZSIsCiAgImRlc2NyaXB0aW9uIjogIlVגעIGNhbGN1bGF0cmljZSBzaW1wbGUuIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJpY29uLTUxMng1MTIucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
 
     <!-- 
       STYLE (CSS)
       L'intégralité du style de l'application est contenue ici.
-      Aucun fichier .css externe n'est utilisé.
     -->
     <style>
         :root {
@@ -103,30 +102,34 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            padding: 15px;
         }
         header { 
+            padding: 15px;
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
         header h1 { font-size: 1.5em; }
         #lock-btn {
             background: none; border: none; font-size: 1.5em; cursor: pointer;
         }
-        nav { display: flex; justify-content: space-around; background: #f9f9f9; padding: 10px 0; margin: 15px -15px 0; }
+        nav { display: flex; justify-content: space-around; background: #f9f9f9; padding: 10px 0; }
         nav button { background: none; border: none; font-size: 1em; cursor: pointer; color: #777; padding: 5px 10px;}
-        nav button.active { color: var(--primary-color); font-weight: bold; }
-        .content-view { flex: 1; overflow-y: auto; padding-top: 15px; }
+        nav button.active { color: var(--primary-color); font-weight: bold; border-bottom: 2px solid var(--primary-color); }
+        .content-view { flex: 1; overflow-y: auto; padding: 15px; }
 
         /* Dashboard */
         .dashboard-card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .dashboard-card h3 { margin-bottom: 10px; font-size: 1em; color: #555; }
-        #prediction-text { font-size: 1.2em; font-weight: bold; }
-        #cycle-chart { display: flex; align-items: flex-end; height: 100px; gap: 5px; border-bottom: 1px solid #ccc; padding-bottom: 5px;}
-        .bar { background-color: var(--primary-color); width: 100%; border-radius: 3px 3px 0 0; }
+        .dashboard-card h3 { margin-bottom: 10px; font-size: 1.1em; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        #prediction-text { font-size: 1.2em; font-weight: bold; text-align: center; padding: 10px 0; }
+        #prediction-countdown { font-size: 2em; font-weight: bold; text-align: center; color: var(--primary-color); }
+        #history-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; }
+        #history-list li { padding: 8px 5px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        #history-list li:last-child { border-bottom: none; }
+        #history-list .event-r { color: var(--event-r-color); font-weight: bold; }
+        #history-list .event-o { color: var(--event-o-color); font-weight: bold; }
+
 
         /* Calendrier */
         #calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -142,7 +145,7 @@
             transition: background-color 0.2s;
         }
         .day:hover { background-color: #f0f0f0; }
-        .day.today { background-color: var(--primary-color); color: white; }
+        .day.today { background-color: var(--primary-color); color: white; font-weight: bold;}
         .day.empty { visibility: hidden; }
         .event-dot {
             position: absolute;
@@ -158,14 +161,14 @@
         .settings-group { margin-bottom: 20px; }
         .settings-group label { display: block; margin-bottom: 5px; }
         .settings-group input, .settings-group textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
         .btn-danger { background-color: #dc3545; }
         
         /* --- Modales --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: center;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
             background: white; padding: 20px; border-radius: 8px;
@@ -229,12 +232,15 @@
             <!-- Vues de contenu -->
             <div id="dashboard-view" class="content-view">
                 <div class="dashboard-card">
-                    <h3>Prochaine Prédiction (R)</h3>
+                    <h3>Prochain Événement</h3>
                     <p id="prediction-text">Calcul en cours...</p>
+                    <div id="prediction-countdown"></div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>Durée des derniers cycles</h3>
-                    <div id="cycle-chart"></div>
+                    <h3>Historique des événements</h3>
+                    <ul id="history-list">
+                        <li>Aucune donnée.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -251,18 +257,18 @@
             <div id="settings-view" class="content-view hidden">
                  <div class="settings-group">
                     <label for="luteal-phase-duration">Durée phase post-signal (jours)</label>
-                    <input type="number" id="luteal-phase-duration" value="14">
+                    <input type="number" id="luteal-phase-duration" value="14" min="10" max="20">
                 </div>
                 <button id="save-settings-btn" class="btn">Enregistrer Paramètres</button>
                 <hr style="margin: 20px 0; border: 1px solid #eee;">
                 <div class="settings-group">
-                    <h3>Exporter les Données</h3>
+                    <h3>Exporter / Sauvegarder</h3>
                     <p style="font-size: 0.9em; color: #666;">Copiez ce texte pour sauvegarder vos données.</p>
                     <textarea id="export-data-field" readonly rows="4"></textarea>
-                    <button id="export-btn" class="btn">Exporter</button>
+                    <button id="export-btn" class="btn">Générer le code d'export</button>
                 </div>
                  <div class="settings-group">
-                    <h3>Importer les Données</h3>
+                    <h3>Importer une Sauvegarde</h3>
                     <p style="font-size: 0.9em; color: #666;">Collez vos données sauvegardées ici.</p>
                     <textarea id="import-data-field" rows="4"></textarea>
                     <button id="import-btn" class="btn">Importer</button>
@@ -278,7 +284,7 @@
         <div class="modal-content">
             <h2 id="setup-title">Définir votre code secret</h2>
             <p id="setup-instruction">Entrez un code à 4 chiffres.</p>
-            <input type="password" id="pincode-input" maxlength="4" pattern="\d*">
+            <input type="password" id="pincode-input" maxlength="4" pattern="\d*" inputmode="numeric">
             <button id="pincode-submit" class="btn">Définir</button>
         </div>
     </div>
@@ -286,7 +292,7 @@
     <div id="onboarding-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2>Configuration Initiale</h2>
-            <p>Pour commencer, nous allons ajouter votre historique d'événements "R".</p>
+            <p>Pour commencer, nous allons ajouter votre historique d'événements "Mode M" (R).</p>
             <button id="start-onboarding-btn" class="btn">Commencer</button>
         </div>
     </div>
@@ -305,23 +311,17 @@
         </div>
     </div>
 
-
-    <!-- 
-      JAVASCRIPT VANILLA
-      L'intégralité de la logique de l'application est contenue ici.
-      Aucun framework ou librairie externe (sauf Crypto.js) n'est utilisé.
-    -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- VARIABLES & ÉTAT GLOBAL ---
-            const APP_DATA_KEY = 'discreetAppData';
-            const PIN_KEY = 'discreetAppPin';
+            const APP_DATA_KEY = 'discreetAppData_v2'; // Clé de stockage
+            const PIN_KEY = 'discreetAppPin_v2';
             let inactivityTimer;
 
             let state = {
                 currentDate: new Date(),
-                events: {}, // Format: "YYYY-MM-DD": { type: 'R'/'O', note: '...' }
+                events: {},
                 settings: {
                     lutealPhase: 14,
                 }
@@ -332,33 +332,24 @@
             const trackerApp = document.getElementById('tracker-app');
             const calcDisplay = document.getElementById('calc-display');
             const calcKeys = document.querySelector('.calc-keys');
-            
             const lockBtn = document.getElementById('lock-btn');
             const navButtons = document.querySelectorAll('.nav-btn');
             const contentViews = document.querySelectorAll('.content-view');
             const headerTitle = document.querySelector('#tracker-app h1');
-
             const setupModal = document.getElementById('setup-modal');
             const pincodeInput = document.getElementById('pincode-input');
             const pincodeSubmit = document.getElementById('pincode-submit');
-            
             const onboardingModal = document.getElementById('onboarding-modal');
             const startOnboardingBtn = document.getElementById('start-onboarding-btn');
-
-            // Calendrier
             const calendarDays = document.getElementById('calendar-days');
             const dayNamesContainer = document.getElementById('day-names');
             const monthYearDisplay = document.getElementById('month-year');
             const prevMonthBtn = document.getElementById('prev-month');
             const nextMonthBtn = document.getElementById('next-month');
-            
-            // Modal jour
             const dayModal = document.getElementById('day-modal');
             let selectedDateStr = '';
 
-
             // --- FONCTIONS DE STOCKAGE LOCAL (NON CHIFFRÉ) ---
-            
             function saveData() {
                 localStorage.setItem(APP_DATA_KEY, JSON.stringify(state));
             }
@@ -366,16 +357,15 @@
             function loadData() {
                 const data = localStorage.getItem(APP_DATA_KEY);
                 if (data) {
-                    state = JSON.parse(data);
-                    // S'assurer que les dates sont des objets Date
+                    const loadedState = JSON.parse(data);
+                    // Fusionner l'état chargé avec l'état par défaut pour éviter les erreurs si la structure change
+                    state = { ...state, ...loadedState };
                     state.currentDate = new Date(state.currentDate);
                 }
-                // Appliquer les paramètres chargés
                 document.getElementById('luteal-phase-duration').value = state.settings.lutealPhase;
             }
 
-            // --- LOGIQUE DE L'APPLICATION ---
-
+            // --- LOGIQUE DE L'APPLICATION (VERROUILLAGE, NAVIGATION) ---
             function lockApp() {
                 trackerApp.classList.add('hidden');
                 calculatorApp.classList.remove('hidden');
@@ -386,75 +376,26 @@
             function unlockApp() {
                 calculatorApp.classList.add('hidden');
                 trackerApp.classList.remove('hidden');
-                
-                // Mettre à jour et afficher la vue par défaut (tableau de bord)
                 navigateTo('dashboard');
                 startInactivityTimer();
             }
-            
+
             function startInactivityTimer() {
                 clearTimeout(inactivityTimer);
                 inactivityTimer = setTimeout(lockApp, 5 * 60 * 1000); // 5 minutes
             }
-            
+
             function resetInactivityTimer() {
                 startInactivityTimer();
             }
-
-            // --- FAÇADE CALCULATRICE ---
-            
-            function handleCalculatorInput(key) {
-                if (calcDisplay.textContent === '0' && key !== '.') {
-                    calcDisplay.textContent = key;
-                } else {
-                    calcDisplay.textContent += key;
-                }
-            }
-
-            function calculateResult() {
-                try {
-                    // Remplacer les symboles visuels par des opérateurs JS
-                    let expression = calcDisplay.textContent.replace(/×/g, '*').replace(/÷/g, '/');
-                    // Utiliser eval est risqué, mais acceptable pour une calculatrice simple.
-                    let result = eval(expression);
-                    calcDisplay.textContent = parseFloat(result.toPrecision(10));
-                } catch (error) {
-                    calcDisplay.textContent = 'Erreur';
-                }
-            }
-            
-            calcKeys.addEventListener('click', (e) => {
-                if (!e.target.matches('button')) return;
-                const key = e.target.dataset.key;
-
-                switch (key) {
-                    case 'clear':
-                        calcDisplay.textContent = '0';
-                        break;
-                    case 'backspace':
-                        calcDisplay.textContent = calcDisplay.textContent.slice(0, -1) || '0';
-                        break;
-                    case '=':
-                        const storedPin = localStorage.getItem(PIN_KEY);
-                        if (calcDisplay.textContent === storedPin) {
-                            unlockApp();
-                        } else {
-                            calculateResult();
-                        }
-                        break;
-                    default:
-                         if ('+-*/%'.includes(key)) {
-                             calcDisplay.textContent += e.target.textContent;
-                         } else {
-                             handleCalculatorInput(key);
-                         }
-                }
-            });
-
-            // --- PARTIE SUIVI ---
             
             function navigateTo(viewName) {
-                headerTitle.textContent = viewName.charAt(0).toUpperCase() + viewName.slice(1);
+                const viewTitles = {
+                    dashboard: 'Tableau de bord',
+                    calendar: 'Calendrier',
+                    settings: 'Paramètres'
+                };
+                headerTitle.textContent = viewTitles[viewName] || 'App';
                 
                 contentViews.forEach(v => v.classList.add('hidden'));
                 document.getElementById(`${viewName}-view`).classList.remove('hidden');
@@ -466,241 +407,59 @@
                 if (viewName === 'calendar') renderCalendar();
             }
 
-            // Dashboard
+            // --- FAÇADE CALCULATRICE ---
+            calcKeys.addEventListener('click', (e) => {
+                if (!e.target.matches('button')) return;
+                const key = e.target.dataset.key;
+                const currentDisplay = calcDisplay.textContent;
+
+                switch (key) {
+                    case 'clear':
+                        calcDisplay.textContent = '0';
+                        break;
+                    case 'backspace':
+                        calcDisplay.textContent = currentDisplay.slice(0, -1) || '0';
+                        break;
+                    case '=':
+                        const storedPin = localStorage.getItem(PIN_KEY);
+                        if (currentDisplay === storedPin) {
+                            unlockApp();
+                        } else {
+                            try {
+                                let expression = currentDisplay.replace(/×/g, '*').replace(/÷/g, '/');
+                                let result = new Function('return ' + expression)();
+                                calcDisplay.textContent = parseFloat(result.toPrecision(10));
+                            } catch (error) {
+                                calcDisplay.textContent = 'Erreur';
+                            }
+                        }
+                        break;
+                    default:
+                        if ('+-*/%'.includes(key)) {
+                            calcDisplay.textContent += e.target.textContent;
+                        } else {
+                            if (currentDisplay === '0' && key !== '.') {
+                                calcDisplay.textContent = key;
+                            } else {
+                                calcDisplay.textContent += key;
+                            }
+                        }
+                }
+            });
+
+            // --- VUE TABLEAU DE BORD ---
             function renderDashboard() {
-                // Algorithme de prédiction simple
+                const predictionText = document.getElementById('prediction-text');
+                const predictionCountdown = document.getElementById('prediction-countdown');
+                const historyList = document.getElementById('history-list');
+
+                predictionText.textContent = '';
+                predictionCountdown.textContent = '';
+                historyList.innerHTML = '';
+                
                 const rEvents = Object.keys(state.events)
                     .filter(date => state.events[date].type === 'R')
-                    .sort();
+                    .sort((a, b) => new Date(a) - new Date(b));
 
-                const predictionText = document.getElementById('prediction-text');
-                const cycleChart = document.getElementById('cycle-chart');
-                cycleChart.innerHTML = '';
-
-                if (rEvents.length < 2) {
-                    predictionText.textContent = "Pas assez de données pour prédire.";
-                    return;
-                }
-
-                const cycleLengths = [];
-                for (let i = 1; i < rEvents.length; i++) {
-                    const date1 = new Date(rEvents[i-1]);
-                    const date2 = new Date(rEvents[i]);
-                    const diffTime = Math.abs(date2 - date1);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    cycleLengths.push(diffDays);
-                }
-                
-                if (cycleLengths.length > 0) {
-                    const avgCycle = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
-                    const lastRDate = new Date(rEvents[rEvents.length - 1]);
-                    const nextRDate = new Date(lastRDate.setDate(lastRDate.getDate() + Math.round(avgCycle)));
-                    
-                    const minDate = new Date(nextRDate);
-                    minDate.setDate(minDate.getDate() - 2);
-                    const maxDate = new Date(nextRDate);
-                    maxDate.setDate(maxDate.getDate() + 2);
-                    
-                    predictionText.textContent = `Entre le ${minDate.toLocaleDateString()} et le ${maxDate.toLocaleDateString()}`;
-
-                    // Afficher le graphique
-                    const maxCycle = Math.max(...cycleLengths);
-                    cycleLengths.slice(-6).forEach(len => { // Affiche les 6 derniers cycles
-                       const bar = document.createElement('div');
-                       bar.className = 'bar';
-                       bar.style.height = `${(len / maxCycle) * 100}%`;
-                       bar.title = `${len} jours`;
-                       cycleChart.appendChild(bar);
-                    });
-                } else {
-                     predictionText.textContent = "Données insuffisantes.";
-                }
-            }
-
-            // Calendrier
-            function renderCalendar() {
-                calendarDays.innerHTML = '';
-                const year = state.currentDate.getFullYear();
-                const month = state.currentDate.getMonth();
-
-                monthYearDisplay.textContent = state.currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const dayOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
-
-                // Afficher les noms des jours
-                if(dayNamesContainer.childElementCount === 0) {
-                    ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(day => {
-                        dayNamesContainer.innerHTML += `<div class="day-name">${day}</div>`;
-                    });
-                }
-
-                for (let i = 0; i < dayOffset; i++) {
-                    calendarDays.innerHTML += `<div class="day empty"></div>`;
-                }
-
-                const today = new Date();
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayEl = document.createElement('div');
-                    dayEl.className = 'day';
-                    dayEl.textContent = day;
-                    dayEl.dataset.date = dateStr;
-
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayEl.classList.add('today');
-                    }
-                    
-                    if (state.events[dateStr]) {
-                        const event = state.events[dateStr];
-                        const dot = document.createElement('div');
-                        dot.classList.add('event-dot');
-                        if (event.type === 'R') dot.classList.add('r-dot');
-                        if (event.type === 'O') dot.classList.add('o-dot');
-                        dayEl.appendChild(dot);
-                    }
-
-                    dayEl.addEventListener('click', () => openDayModal(dateStr));
-                    calendarDays.appendChild(dayEl);
-                }
-            }
-            
-            // --- GESTION DES MODALES ---
-
-            function openDayModal(dateStr) {
-                selectedDateStr = dateStr;
-                const date = new Date(dateStr);
-                document.getElementById('day-modal-title').textContent = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-                
-                const eventData = state.events[dateStr];
-                document.getElementById('day-modal-note').value = eventData ? eventData.note : '';
-                
-                dayModal.classList.remove('hidden');
-            }
-            
-            function closeDayModal() {
-                dayModal.classList.add('hidden');
-            }
-            
-            function saveDayData(type) {
-                const note = document.getElementById('day-modal-note').value;
-                if(type) {
-                    if(!state.events[selectedDateStr]) state.events[selectedDateStr] = {};
-                    state.events[selectedDateStr].type = type;
-                    state.events[selectedDateStr].note = note;
-                } else if (note.trim() !== '') {
-                     if(!state.events[selectedDateStr]) state.events[selectedDateStr] = {};
-                     state.events[selectedDateStr].note = note;
-                }
-                saveData();
-                renderCalendar();
-            }
-
-            // --- INITIALISATION & ONBOARDING ---
-
-            function init() {
-                // Attacher les écouteurs d'événements globaux
-                document.body.addEventListener('click', resetInactivityTimer);
-                document.body.addEventListener('keypress', resetInactivityTimer);
-                lockBtn.addEventListener('click', lockApp);
-
-                navButtons.forEach(btn => {
-                    btn.addEventListener('click', () => navigateTo(btn.dataset.view));
-                });
-                
-                prevMonthBtn.addEventListener('click', () => {
-                    state.currentDate.setMonth(state.currentDate.getMonth() - 1);
-                    renderCalendar();
-                });
-                nextMonthBtn.addEventListener('click', () => {
-                    state.currentDate.setMonth(state.currentDate.getMonth() + 1);
-                    renderCalendar();
-                });
-
-                // Écouteurs modale jour
-                document.getElementById('add-r-event').addEventListener('click', () => { saveDayData('R'); closeDayModal(); });
-                document.getElementById('add-o-event').addEventListener('click', () => { saveDayData('O'); closeDayModal(); });
-                document.getElementById('remove-event').addEventListener('click', () => {
-                    delete state.events[selectedDateStr];
-                    saveData();
-                    renderCalendar();
-                    closeDayModal();
-                });
-                document.getElementById('save-day-btn').addEventListener('click', () => { saveDayData(state.events[selectedDateStr]?.type); closeDayModal(); });
-                document.getElementById('close-day-modal-btn').addEventListener('click', closeDayModal);
-
-
-                // Paramètres
-                document.getElementById('save-settings-btn').addEventListener('click', () => {
-                    state.settings.lutealPhase = parseInt(document.getElementById('luteal-phase-duration').value) || 14;
-                    saveData();
-                    alert('Paramètres enregistrés !');
-                });
-                document.getElementById('export-btn').addEventListener('click', () => {
-                    document.getElementById('export-data-field').value = JSON.stringify({state: state, pin: localStorage.getItem(PIN_KEY)});
-                });
-                document.getElementById('import-btn').addEventListener('click', () => {
-                    const dataStr = document.getElementById('import-data-field').value;
-                    try {
-                        const dataToImport = JSON.parse(dataStr);
-                        if (dataToImport.state && dataToImport.pin) {
-                            state = dataToImport.state;
-                            localStorage.setItem(PIN_KEY, dataToImport.pin);
-                            saveData();
-                            alert('Données importées avec succès !');
-                            location.reload();
-                        } else {
-                            alert('Erreur : format de données invalide.');
-                        }
-                    } catch (e) {
-                         alert('Erreur lors de l\'importation. Vérifiez les données collées.');
-                    }
-                });
-                document.getElementById('reset-app-btn').addEventListener('click', () => {
-                    if (confirm("Êtes-vous sûr de vouloir tout réinitialiser ? Toutes vos données seront perdues.")) {
-                        localStorage.removeItem(APP_DATA_KEY);
-                        localStorage.removeItem(PIN_KEY);
-                        location.reload();
-                    }
-                });
-
-
-                // Vérifier si un PIN est défini
-                const storedPin = localStorage.getItem(PIN_KEY);
-                if (!storedPin) {
-                    setupModal.classList.remove('hidden');
-                } else {
-                    loadData();
-                }
-
-                pincodeSubmit.addEventListener('click', () => {
-                    const pin = pincodeInput.value;
-                    if (pin.length === 4 && /^\d+$/.test(pin)) {
-                        localStorage.setItem(PIN_KEY, pin);
-                        setupModal.classList.add('hidden');
-                        onboardingModal.classList.remove('hidden'); // Lancer l'onboarding
-                    } else {
-                        alert("Veuillez entrer un code à 4 chiffres.");
-                    }
-                });
-                
-                startOnboardingBtn.addEventListener('click', () => {
-                    // Dates initiales
-                    const initialDates = ['2025-09-07', '2025-10-01', '2025-10-27'];
-                    initialDates.forEach(date => {
-                        state.events[date] = { type: 'R', note: 'Import initial' };
-                    });
-                    saveData();
-                    onboardingModal.classList.add('hidden');
-                    alert('Configuration terminée ! Votre application est prête.');
-                });
-            }
-
-            // Démarrer l'application
-            init();
-        });
-    </script>
-
-</body>
-</html>
+                // --- Affichage de l'historique ---
+                const allE

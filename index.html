@@ -1,3 +1,18 @@
+Vous avez un œil de lynx ! C'est exactement ça. Vous avez parfaitement identifié un défaut majeur dans la logique de prédiction.
+
+Mes excuses pour cette erreur. Le programme affichait les deux événements les plus proches dans le temps, sans vérifier si leur relation était biologiquement possible. Le résultat, comme vous l'avez montré, était une ovulation ("Mode O") prédite pour le lendemain du début des règles ("Mode R"), ce qui est incohérent.
+
+La logique a été entièrement corrigée pour refléter la réalité biologique. L'application va maintenant :
+
+1.  Identifier le **prochain "Mode R"** (qu'il soit manuel ou prédit).
+2.  Identifier le **prochain "Mode O"**.
+3.  Effectuer une **vérification de cohérence** : si le "Mode O" trouvé se situe *après* le "Mode R", l'application considère que cette prédiction d'ovulation est illogique (car elle appartient au cycle suivant) et la recalcule pour qu'elle ait lieu **avant** le "Mode R" qui arrive.
+
+Cela garantit que le tableau de bord affiche toujours une séquence logique et fiable.
+
+### Code corrigé
+
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -287,7 +302,7 @@
 
                 let allFutureEvents = [];
 
-                // CORRECTION : Étape 1 - Récupérer les événements futurs saisis manuellement
+                // Étape 1 : Récupérer les événements manuels futurs
                 for (const dateStr in state.events) {
                     const eventDate = new Date(dateStr + 'T00:00:00');
                     if (eventDate >= today) {
@@ -300,13 +315,12 @@
                     }
                 }
 
+                // Étape 2 : Calculer les prédictions
                 const predictionData = getPredictionData();
                 if (predictionData) {
-                    const { avgCycle, lastRDate, confidence } = predictionData;
-                    const starsHTML = renderStars(confidence);
+                    const { avgCycle, lastRDate, confidence, starsHTML } = predictionData;
                     const lastRDateObj = new Date(lastRDate);
                     
-                    // Étape 2 - Calculer les prédictions
                     for (let i = 1; i <= 4; i++) {
                         let predictedR = new Date(lastRDateObj);
                         predictedR.setDate(predictedR.getDate() + Math.round(avgCycle * i));
@@ -314,27 +328,43 @@
                         let predictedO = new Date(predictedR);
                         predictedO.setDate(predictedO.getDate() - state.settings.lutealPhase);
 
-                        if (predictedR >= today) allFutureEvents.push({ type: 'R', date: predictedR, isManual: false, confidence, starsHTML });
-                        if (predictedO >= today) allFutureEvents.push({ type: 'O', date: predictedO, isManual: false, confidence, starsHTML });
+                        if (predictedR >= today) allFutureEvents.push({ type: 'R', date: predictedR, isManual: false, confidence, starsHTML: renderStars(confidence) });
+                        if (predictedO >= today) allFutureEvents.push({ type: 'O', date: predictedO, isManual: false, confidence, starsHTML: renderStars(confidence) });
                     }
                 }
-                
-                // Étape 3 - Fusionner, dédoublonner et trier
-                const uniqueEvents = new Map();
+
                 allFutureEvents.sort((a, b) => a.date - b.date);
 
-                for (const event of allFutureEvents) {
-                    const key = event.date.toISOString().split('T')[0] + '-' + event.type;
-                    if (!uniqueEvents.has(key)) {
-                        uniqueEvents.set(key, event);
+                // --- NOUVELLE LOGIQUE DE CORRECTION ---
+                const nextR = allFutureEvents.find(e => e.type === 'R');
+                let nextO = allFutureEvents.find(e => e.type === 'O');
+                
+                if (nextR && nextO && nextO.date > nextR.date) {
+                    let potentialODate = new Date(nextR.date);
+                    potentialODate.setDate(potentialODate.getDate() - state.settings.lutealPhase);
+                    
+                    if (potentialODate < today) {
+                        nextO = null; 
+                    } else {
+                        nextO = {
+                            type: 'O',
+                            date: potentialODate,
+                            isManual: false,
+                            confidence: predictionData ? predictionData.confidence : 0,
+                            starsHTML: predictionData ? renderStars(predictionData.confidence) : renderStars(0)
+                        };
                     }
                 }
 
-                const finalEventsToShow = Array.from(uniqueEvents.values());
+                let finalEventsToShow = [];
+                if (nextR) finalEventsToShow.push(nextR);
+                if (nextO) finalEventsToShow.push(nextO);
 
-                // Étape 4 - Afficher les 2 événements les plus proches
+                finalEventsToShow.sort((a, b) => a.date - b.date);
+                
+                // Étape 3 : Afficher les événements corrigés
                 if (finalEventsToShow.length > 0) {
-                    finalEventsToShow.slice(0, 2).forEach(event => {
+                    finalEventsToShow.forEach(event => {
                         let eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
                         if (event.isManual) {
                             eventName += ' (manuel)';
@@ -362,7 +392,6 @@
                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Aucun événement futur proche, manuel ou prédit.</p>`;
                 }
             };
-
             
             const renderJournalView = () => {
                 const tableBody = $('#journal-table tbody');
@@ -641,3 +670,4 @@
 
 </body>
 </html>
+```

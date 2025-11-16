@@ -70,14 +70,12 @@
         nav button.active { color: var(--primary-color); font-weight: bold; border-bottom: 2px solid var(--primary-color); }
         .content-view { flex: 1; overflow-y: auto; padding: 15px; }
 
-        /* Vues */
         .predictions-container { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
         .prediction-card { background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center; }
         .prediction-card h4 { font-size: 1em; color: #555; margin-bottom: 5px; }
         .prediction-date { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .prediction-countdown { font-size: 0.9em; color: #777; margin-bottom: 10px; }
         .confidence-stars { font-size: 1.2em; color: var(--star-color); }
-        .fertile-window-info { font-size: 0.85em; color: #555; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; }
 
         .dashboard-card { background: #f9f9f9; padding: 15px; border-radius: 8px; }
         .dashboard-card h3 { margin-bottom: 10px; font-size: 1.1em; color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
@@ -98,7 +96,6 @@
         .o-dot { background-color: var(--event-o-color); }
         .a-dot { background-color: var(--event-a-color); }
 
-        /* NOUVELLE VUE : Journal */
         #journal-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
         #journal-table th, #journal-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
         #journal-table th { background-color: #f9f9f9; }
@@ -107,7 +104,6 @@
         .check.event-o { color: var(--event-o-color); }
         .check.event-a { color: var(--event-a-color); }
         
-        /* Modales et boutons */
         .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
         .btn-danger { background-color: #dc3545; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
@@ -137,27 +133,17 @@
             <nav>
                 <button class="nav-btn active" data-view="dashboard">Tableau de bord</button>
                 <button class="nav-btn" data-view="calendar">Calendrier</button>
-                <button class="nav-btn" data-view="journal">Journal</button> <!-- NOUVEAU BOUTON -->
+                <button class="nav-btn" data-view="journal">Journal</button>
                 <button class="nav-btn" data-view="settings">Paramètres</button>
             </nav>
 
             <div id="dashboard-view" class="content-view"><div id="predictions-container" class="predictions-container"></div><div class="dashboard-card"><h3>Historique des événements</h3><ul id="history-list"></ul></div></div>
             <div id="calendar-view" class="content-view hidden"><div id="calendar-header"><button id="prev-month">◄</button><span id="month-year"></span><button id="next-month">►</button></div><div class="calendar-grid" id="day-names"></div><div class="calendar-grid" id="calendar-days"></div></div>
             
-            <!-- NOUVELLE VUE JOURNAL -->
             <div id="journal-view" class="content-view hidden">
                 <table id="journal-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>A</th>
-                            <th>R</th>
-                            <th>O</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront injectées ici -->
-                    </tbody>
+                    <thead><tr><th>Date</th><th>A</th><th>R</th><th>O</th></tr></thead>
+                    <tbody></tbody>
                 </table>
             </div>
 
@@ -190,8 +176,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v9';
-            const PIN_KEY = 'discreetAppPin_v9';
+            const APP_DATA_KEY = 'discreetAppData_v10';
+            const PIN_KEY = 'discreetAppPin_v10';
             let inactivityTimer;
 
             let state = {
@@ -310,23 +296,15 @@
                         else if (daysToStart === 0) countdownText = `Commence aujourd'hui`;
                         else if (daysToStart < 0 && today <= endDate) countdownText = `En ce moment`;
                         
-                        let fertileWindowHTML = '';
-                        if (event.type === 'O') {
-                            const fertileStart = new Date(event.date);
-                            fertileStart.setDate(fertileStart.getDate() - 5);
-                            fertileWindowHTML = `<div class="fertile-window-info">Période de fertilité estimée :<br>${fertileStart.toLocaleDateString('fr-FR')} - ${event.date.toLocaleDateString('fr-FR')}</div>`;
-                        }
-
-                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div>${fertileWindowHTML}</div>`;
+                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
                     });
                 }
                 
                 let combinedHistory = [];
                 for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
                 
-                const cycleAnchorEvents = Object.keys(state.events).filter(date => ['R', 'Rd'].includes(state.events[date].type)).sort((a, b) => new Date(a) - new Date(b));
                 if(predictionData) {
-                    const allCycleStarts = [...cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
+                    const allCycleStarts = [...predictionData.cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
                     for (let i = 1; i < allCycleStarts.length; i++) {
                         let supposedODate = new Date(allCycleStarts[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
@@ -340,7 +318,7 @@
                 combinedHistory.sort((a, b) => b.date - a.date);
                 if (combinedHistory.length > 0) {
                     const nameMap = { R: 'Mode R', Rd: 'Mode R (Début)', Rf: 'Mode R (Fin)', O: 'Mode O', A: 'Mode A' };
-                    historyList.innerHTML = combinedHistory.slice(0, 10).map(item => { // Affiche les 10 derniers
+                    historyList.innerHTML = combinedHistory.slice(0, 10).map(item => {
                         const eventName = nameMap[item.type] || 'Événement';
                         const eventClass = ['R', 'Rd', 'Rf'].includes(item.type) ? 'event-r' : (item.type === 'O' ? 'event-o' : 'event-a');
                         return `<li><span>${item.date.toLocaleDateString('fr-FR')}</span><strong class="${eventClass} ${item.isSupposed ? 'supposed-event' : ''}">${eventName} ${item.isSupposed ? '*' : ''}</strong></li>`;
@@ -350,11 +328,9 @@
                 }
             };
             
-            // NOUVELLE FONCTION POUR LA VUE JOURNAL
             const renderJournalView = () => {
                 const tableBody = $('#journal-table tbody');
                 tableBody.innerHTML = '';
-
                 let logData = {};
 
                 // 1. Collecter tous les événements
@@ -364,22 +340,31 @@
                 }
 
                 const predictionData = getPredictionData();
+                const allRDates = [], allODates = [];
+
                 if (predictionData) {
-                     const allCycleStarts = [...predictionData.cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
+                    const allCycleStarts = [...predictionData.cycleAnchorEvents, new Date(predictionData.lastRDate.setDate(predictionData.lastRDate.getDate() + Math.round(predictionData.avgCycle))).toISOString().split('T')[0]];
                     for (let i = 1; i < allCycleStarts.length; i++) {
                         let supposedODate = new Date(allCycleStarts[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
-                        if (supposedODate < new Date()) { // Inclure toutes les dates passées
-                             const dateStr = supposedODate.toISOString().split('T')[0];
-                             if (!logData[dateStr] || !logData[dateStr].includes('O')) {
+                        if (supposedODate < new Date()) {
+                            const dateStr = supposedODate.toISOString().split('T')[0];
+                            if (!logData[dateStr] || !logData[dateStr].includes('O')) {
                                 if (!logData[dateStr]) logData[dateStr] = [];
                                 logData[dateStr].push('O*');
-                             }
+                            }
                         }
                     }
                 }
-                
-                // 2. Filtrer, trier et afficher
+
+                // 2. Créer des listes de dates pour la comparaison des couleurs
+                for (const dateStr in logData) {
+                    const events = logData[dateStr];
+                    const date = new Date(dateStr + 'T00:00:00');
+                    if (events.some(type => ['R', 'Rd', 'Rf'].includes(type))) allRDates.push(date);
+                    if (events.some(type => ['O', 'O*'].includes(type))) allODates.push(date);
+                }
+
                 const startDate = new Date('2025-05-01');
                 const sortedDates = Object.keys(logData)
                     .filter(dateStr => new Date(dateStr) >= startDate)
@@ -387,14 +372,23 @@
 
                 sortedDates.forEach(dateStr => {
                     const events = logData[dateStr];
+                    const currentDate = new Date(dateStr + 'T00:00:00');
                     const hasA = events.includes('A');
-                    const hasR = events.includes('R') || events.includes('Rd') || events.includes('Rf');
-                    const hasO = events.includes('O') || events.includes('O*');
+                    const hasR = events.some(type => ['R', 'Rd', 'Rf'].includes(type));
+                    const hasO = events.some(type => ['O', 'O*'].includes(type));
+
+                    let cellStyle = '';
+                    if (hasA) {
+                        const isNearR = allRDates.some(rDate => Math.abs((currentDate - rDate) / 86400000) <= 2);
+                        const isNearO = allODates.some(oDate => Math.abs((currentDate - oDate) / 86400000) <= 2);
+                        if (isNearR) cellStyle = 'background-color: #ffffe0;'; // Jaune clair
+                        if (isNearO) cellStyle = 'background-color: #add8e6;'; // Bleu ciel
+                    }
 
                     tableBody.innerHTML += `
                         <tr>
-                            <td>${new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR')}</td>
-                            <td>${hasA ? '<span class="check event-a">✓</span>' : ''}</td>
+                            <td>${currentDate.toLocaleDateString('fr-FR')}</td>
+                            <td style="${cellStyle}">${hasA ? '<span class="check event-a">✓</span>' : ''}</td>
                             <td>${hasR ? '<span class="check event-r">✓</span>' : ''}</td>
                             <td>${hasO ? '<span class="check event-o">✓</span>' : ''}</td>
                         </tr>
@@ -539,7 +533,6 @@
                     };
                     
                     for(const date in initialHistory){
-                        // Permet de fusionner les événements si une date a plusieurs types (ex: A et Rd)
                         state.events[date] = { ...state.events[date], ...initialHistory[date], note: 'Import initial' };
                     }
                     

@@ -1,18 +1,3 @@
-Vous avez un œil de lynx ! C'est exactement ça. Vous avez parfaitement identifié un défaut majeur dans la logique de prédiction.
-
-Mes excuses pour cette erreur. Le programme affichait les deux événements les plus proches dans le temps, sans vérifier si leur relation était biologiquement possible. Le résultat, comme vous l'avez montré, était une ovulation ("Mode O") prédite pour le lendemain du début des règles ("Mode R"), ce qui est incohérent.
-
-La logique a été entièrement corrigée pour refléter la réalité biologique. L'application va maintenant :
-
-1.  Identifier le **prochain "Mode R"** (qu'il soit manuel ou prédit).
-2.  Identifier le **prochain "Mode O"**.
-3.  Effectuer une **vérification de cohérence** : si le "Mode O" trouvé se situe *après* le "Mode R", l'application considère que cette prédiction d'ovulation est illogique (car elle appartient au cycle suivant) et la recalcule pour qu'elle ait lieu **avant** le "Mode R" qui arrive.
-
-Cela garantit que le tableau de bord affiche toujours une séquence logique et fiable.
-
-### Code corrigé
-
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -670,4 +655,4 @@ Cela garantit que le tableau de bord affiche toujours une séquence logique et f
 
 </body>
 </html>
-```
+

@@ -20,7 +20,7 @@
             --special-bg: #d6d6d6;
             --event-r-color: #007bff;
             --event-o-color: #ff9800;
-            --event-a-color: #e83e8c; /* Nouvelle couleur pour Mode A */
+            --event-a-color: #e83e8c;
             --star-color: #f39c12;
             --btn-secondary-bg: #6c757d;
         }
@@ -100,7 +100,7 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
         .day { padding: 8px 0; cursor: pointer; border-radius: 50%; position: relative; transition: background-color 0.2s; }
         .day.today { background-color: var(--primary-color); color: white; font-weight: bold;}
-        .day.fertile { background-color: #e83e8c1a; border-radius: 0; } /* Style pour la fenêtre de fertilité */
+        .day.fertile { background-color: #e83e8c1a; border-radius: 0; }
         .event-dot { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; }
         .r-dot { background-color: var(--event-r-color); }
         .o-dot { background-color: var(--event-o-color); }
@@ -144,7 +144,7 @@
 
     <!-- Modales -->
     <div id="setup-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Définir votre code secret</h2><p>Entrez un code à 4 chiffres.</p><input type="password" id="pincode-input" maxlength="4" pattern="\d*" inputmode="numeric"><button id="pincode-submit" class="btn">Définir</button></div></div>
-    <div id="onboarding-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Configuration Initiale</h2><p>Ajout de votre historique d'événements "Mode R".</p><button id="start-onboarding-btn" class="btn">Commencer</button></div></div>
+    <div id="onboarding-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Configuration Initiale</h2><p>Ajout de votre historique complet.</p><button id="start-onboarding-btn" class="btn">Commencer</button></div></div>
     <div id="day-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2 id="day-modal-title"></h2>
@@ -155,7 +155,7 @@
                  </div>
                  <button id="add-r-event" class="btn" style="background-color: var(--btn-secondary-bg);">Mode R (isolé)</button>
                  <button id="add-o-event" class="btn" style="background-color: var(--event-o-color);">Mode O</button>
-                 <button id="add-a-event" class="btn" style="background-color: var(--event-a-color);">Ajouter Mode A</button> <!-- NOUVEAU BOUTON -->
+                 <button id="add-a-event" class="btn" style="background-color: var(--event-a-color);">Ajouter Mode A</button>
                  <button id="remove-event" class="btn btn-danger">Supprimer l'événement</button>
             </div>
             <textarea id="day-modal-note" placeholder="Ajouter une note..."></textarea>
@@ -167,8 +167,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v7';
-            const PIN_KEY = 'discreetAppPin_v7';
+            const APP_DATA_KEY = 'discreetAppData_v8';
+            const PIN_KEY = 'discreetAppPin_v8';
             let inactivityTimer;
 
             let state = {
@@ -221,10 +221,6 @@
 
             const renderStars = (score) => '★'.repeat(Math.round(score)) + '☆'.repeat(5 - Math.round(score));
 
-            /**
-             * Calcule les données de prédiction de base.
-             * @returns {object|null} Un objet avec avgCycle, lastRDate, etc., ou null si pas assez de données.
-             */
             const getPredictionData = () => {
                 const cycleAnchorEvents = Object.keys(state.events)
                     .filter(date => ['R', 'Rd'].includes(state.events[date].type))
@@ -242,7 +238,8 @@
                 return {
                     avgCycle,
                     lastRDate: new Date(cycleAnchorEvents[cycleAnchorEvents.length - 1]),
-                    confidence: calculateConfidence(cycleLengths.length, getStandardDeviation(cycleLengths))
+                    confidence: calculateConfidence(cycleLengths.length, getStandardDeviation(cycleLengths)),
+                    cycleAnchorEvents: cycleAnchorEvents
                 };
             };
 
@@ -255,11 +252,14 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
+                let combinedHistory = [];
+                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
+
                 const predictionData = getPredictionData();
                 if (!predictionData) {
                     predictionsContainer.innerHTML = `<p style="text-align:center; color: #666;">Ajoutez au moins deux "Mode Rd" pour activer les prédictions.</p>`;
                 } else {
-                    const { avgCycle, lastRDate, confidence } = predictionData;
+                    const { avgCycle, lastRDate, confidence, cycleAnchorEvents } = predictionData;
                     const starsHTML = renderStars(confidence);
                     
                     const futurePredictions = [];
@@ -276,7 +276,7 @@
                         const eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
                         const eventColor = event.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
                         
-                        const margin = 1; // ± 1 jour
+                        const margin = 1;
                         const startDate = new Date(event.date);
                         startDate.setDate(startDate.getDate() - margin);
                         const endDate = new Date(event.date);
@@ -298,23 +298,8 @@
 
                         predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div>${fertileWindowHTML}</div>`;
                     });
-                }
-                
-                let combinedHistory = [];
-                for (const dateStr in state.events) combinedHistory.push({ ...state.events[dateStr], date: new Date(dateStr), isSupposed: false });
-                
-                const cycleAnchorEvents = Object.keys(state.events)
-                    .filter(date => ['R', 'Rd'].includes(state.events[date].type))
-                    .sort((a, b) => new Date(a) - new Date(b));
-
-                if(cycleAnchorEvents.length >= 1) {
-                    const allCycleStarts = [...cycleAnchorEvents];
-                    if(predictionData) {
-                         const nextR = new Date(predictionData.lastRDate);
-                         nextR.setDate(nextR.getDate() + Math.round(predictionData.avgCycle));
-                         allCycleStarts.push(nextR.toISOString().split('T')[0]);
-                    }
-
+                    
+                    const allCycleStarts = [...cycleAnchorEvents, new Date(lastRDate.setDate(lastRDate.getDate() + Math.round(avgCycle))).toISOString().split('T')[0]];
                     for (let i = 1; i < allCycleStarts.length; i++) {
                         let supposedODate = new Date(allCycleStarts[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
@@ -466,11 +451,32 @@
                         if (Object.keys(state.events).length === 0) $('#onboarding-modal').classList.remove('hidden');
                     } else alert("Code invalide.");
                 });
+                
+                // --- NOUVELLE LOGIQUE D'INITIALISATION AVEC HISTORIQUE COMPLET ---
                 $('#start-onboarding-btn').addEventListener('click', () => {
-                    ['2025-09-07', '2025-10-01', '2025-10-27'].forEach(date => { state.events[date] = { type: 'Rd', note: 'Import initial' }; });
+                    const initialHistory = [
+                        { date: '2025-07-28', type: 'A' },
+                        { date: '2025-08-18', type: 'A' },
+                        { date: '2025-08-23', type: 'A' },
+                        { date: '2025-08-27', type: 'A' },
+                        { date: '2025-09-07', type: 'Rd' }, // Début des règles
+                        { date: '2025-09-10', type: 'A' },
+                        { date: '2025-09-30', type: 'A' },
+                        { date: '2025-10-01', type: 'Rd' }, // Début des règles
+                        { date: '2025-10-04', type: 'A' },
+                        { date: '2025-10-15', type: 'A' },
+                        { date: '2025-10-27', type: 'Rd' }, // Début des règles
+                        { date: '2025-10-28', type: 'A' },
+                        { date: '2025-11-03', type: 'A' }
+                    ];
+                    
+                    initialHistory.forEach(item => {
+                        state.events[item.date] = { type: item.type, note: 'Import initial' };
+                    });
+                    
                     saveData();
                     $('#onboarding-modal').classList.add('hidden');
-                    alert('Configuration terminée !');
+                    alert('Configuration avec historique complet terminée !');
                 });
             };
 

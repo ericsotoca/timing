@@ -100,6 +100,8 @@
         #journal-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
         #journal-table th, #journal-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
         #journal-table th { background-color: #f9f9f9; }
+        #journal-table .event-cell { cursor: pointer; user-select: none; }
+        #journal-table .event-cell:hover { background-color: #f0f0f0; }
         .check { font-weight: bold; }
         .check.event-r { color: var(--event-r-color); }
         .check.event-o { color: var(--event-o-color); }
@@ -338,8 +340,14 @@
                         if (isNearR) cellStyle = 'background-color: #ffecb3;'; // Jaune visible
                         if (isNearO) cellStyle = 'background-color: #add8e6;'; // Bleu ciel (prioritaire)
                     }
-
-                    tableBody.innerHTML += `<tr><td>${currentDate.toLocaleDateString('fr-FR')}</td><td style="${cellStyle}">${hasA ? '<span class="check event-a">✓</span>' : ''}</td><td>${hasR ? '<span class="check event-r">✓</span>' : ''}</td><td>${hasO ? '<span class="check event-o">✓</span>' : ''}</td></tr>`;
+                    
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${currentDate.toLocaleDateString('fr-FR')}</td>
+                            <td class="event-cell" data-date="${dateStr}" data-event-type="A" style="${cellStyle}">${hasA ? '<span class="check event-a">✓</span>' : ''}</td>
+                            <td class="event-cell" data-date="${dateStr}" data-event-type="R">${hasR ? '<span class="check event-r">✓</span>' : ''}</td>
+                            <td class="event-cell" data-date="${dateStr}" data-event-type="O">${hasO ? '<span class="check event-o">✓</span>' : ''}</td>
+                        </tr>`;
                 });
             };
 
@@ -368,7 +376,6 @@
                 for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
                     const date = new Date(year, month, day);
                     
-                    // CORRECTION: Générer la chaîne de date sans conversion de fuseau horaire
                     const yyyy = date.getFullYear();
                     const mm = String(date.getMonth() + 1).padStart(2, '0');
                     const dd = String(date.getDate()).padStart(2, '0');
@@ -415,6 +422,38 @@
                 saveData();
                 refreshActiveView();
             };
+            
+            const toggleEvent = (dateStr, eventType) => {
+                if (!state.events[dateStr]) {
+                    state.events[dateStr] = { types: [], note: '' };
+                }
+                const eventTypes = state.events[dateStr].types;
+
+                let typesToHandle = [];
+                let hasEvent = false;
+
+                if (eventType === 'R') {
+                    typesToHandle = ['R', 'Rd', 'Rf'];
+                    hasEvent = eventTypes.some(t => typesToHandle.includes(t));
+                } else {
+                    typesToHandle = [eventType];
+                    hasEvent = eventTypes.includes(eventType);
+                }
+
+                if (hasEvent) {
+                    state.events[dateStr].types = eventTypes.filter(t => !typesToHandle.includes(t));
+                } else {
+                    eventTypes.push(eventType);
+                }
+
+                if (state.events[dateStr].types.length === 0 && (!state.events[dateStr].note || !state.events[dateStr].note.trim())) {
+                    delete state.events[dateStr];
+                }
+
+                saveData();
+                refreshActiveView();
+            };
+
             const saveNoteOnly = () => {
                 const note = $('#day-modal-note').value;
                 if (!state.events[selectedDateStr] && note.trim()) state.events[selectedDateStr] = { types: [], note: '' };
@@ -459,6 +498,13 @@
                 });
                 $('#reset-app-btn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment tout réinitialiser ?")) { localStorage.clear(); location.reload(); } });
                 
+                $('#journal-table').addEventListener('click', (e) => {
+                    const cell = e.target.closest('.event-cell');
+                    if (cell) {
+                        toggleEvent(cell.dataset.date, cell.dataset.eventType);
+                    }
+                });
+
                 $('.calc-keys').addEventListener('click', (e) => {
                     if (!e.target.matches('button')) return;
                     const key = e.target.dataset.key;

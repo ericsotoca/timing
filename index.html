@@ -83,7 +83,7 @@
             background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;
         }
         .prediction-card h4 { font-size: 1em; color: #555; margin-bottom: 5px; }
-        .prediction-date { font-size: 1.4em; font-weight: bold; margin-bottom: 5px; }
+        .prediction-date { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .prediction-countdown { font-size: 0.9em; color: #777; margin-bottom: 10px; }
         .confidence-stars { font-size: 1.2em; color: var(--star-color); }
 
@@ -127,7 +127,6 @@
 <body>
 
     <div class="app-container">
-
         <div id="calculator-app">
             <div id="calc-display" class="calc-display">0</div>
             <div class="calc-keys">
@@ -156,7 +155,6 @@
     <!-- Modales -->
     <div id="setup-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Définir votre code secret</h2><p>Entrez un code à 4 chiffres.</p><input type="password" id="pincode-input" maxlength="4" pattern="\d*" inputmode="numeric"><button id="pincode-submit" class="btn">Définir</button></div></div>
     <div id="onboarding-modal" class="modal-overlay hidden"><div class="modal-content"><h2>Configuration Initiale</h2><p>Ajout de votre historique d'événements "Mode R".</p><button id="start-onboarding-btn" class="btn">Commencer</button></div></div>
-    
     <div id="day-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2 id="day-modal-title"></h2>
@@ -178,8 +176,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            const APP_DATA_KEY = 'discreetAppData_v5';
-            const PIN_KEY = 'discreetAppPin_v5';
+            const APP_DATA_KEY = 'discreetAppData_v6';
+            const PIN_KEY = 'discreetAppPin_v6';
             let inactivityTimer;
 
             let state = {
@@ -262,7 +260,6 @@
                     
                     const lastRDate = new Date(cycleAnchorEvents[cycleAnchorEvents.length - 1]);
 
-                    // Prédictions futures
                     const futurePredictions = [];
                     let currentR = new Date(lastRDate);
                     for (let i = 0; i < 4; i++) {
@@ -276,11 +273,31 @@
                     futurePredictions.sort((a, b) => a.date - b.date).slice(0, 2).forEach(event => {
                         const eventName = event.type === 'R' ? 'Prochain Mode R' : 'Prochain Mode O';
                         const eventColor = event.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
-                        const daysRemaining = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
-                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${event.date.toLocaleString('fr-FR')}</div><div class="prediction-countdown">Dans environ ${daysRemaining} jour(s)</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
+                        
+                        // --- NOUVELLE LOGIQUE DE PLAGE DE DATES ---
+                        const margin = 1; // ± 1 jour
+                        const startDate = new Date(event.date);
+                        startDate.setDate(startDate.getDate() - margin);
+                        const endDate = new Date(event.date);
+                        endDate.setDate(endDate.getDate() + margin);
+                        const dateRangeString = `du ${startDate.toLocaleDateString('fr-FR')} au ${endDate.toLocaleDateString('fr-FR')}`;
+                        
+                        // --- NOUVELLE LOGIQUE DE COMPTE À REBOURS ---
+                        const daysToStart = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
+                        let countdownText = '';
+                        if (daysToStart > 1) {
+                            countdownText = `Commence dans ${daysToStart} jours`;
+                        } else if (daysToStart === 1) {
+                            countdownText = `Commence demain`;
+                        } else if (today >= startDate && today <= endDate) {
+                            countdownText = `En ce moment`;
+                        } else if (daysToStart <= 0) {
+                             countdownText = `Commence aujourd'hui`;
+                        }
+                        
+                        predictionsContainer.innerHTML += `<div class="prediction-card"><h4>${eventName}</h4><div class="prediction-date" style="color: ${eventColor}">${dateRangeString}</div><div class="prediction-countdown">${countdownText}</div><div class="confidence-stars" title="Indice de confiance : ${confidence.toFixed(1)}/5">${starsHTML}</div></div>`;
                     });
                     
-                    // CORRECTION: Ajout de l'ovulation supposée du cycle EN COURS
                     const nextPredictedRDate = new Date(lastRDate);
                     nextPredictedRDate.setDate(nextPredictedRDate.getDate() + Math.round(avgCycle));
                     const currentCyclePredictedODate = new Date(nextPredictedRDate);
@@ -288,12 +305,11 @@
                     
                     if (currentCyclePredictedODate < today) {
                         const dateStr = currentCyclePredictedODate.toISOString().split('T')[0];
-                        if (!state.events[dateStr]) { // Vérifier qu'il n'y a pas déjà un événement manuel
+                        if (!state.events[dateStr]) { 
                             combinedHistory.push({ type: 'O', date: currentCyclePredictedODate, isSupposed: true });
                         }
                     }
 
-                    // Ajout des ovulations supposées des cycles COMPLÉTÉS
                     for (let i = 1; i < cycleAnchorEvents.length; i++) {
                         let supposedODate = new Date(cycleAnchorEvents[i]);
                         supposedODate.setDate(supposedODate.getDate() - state.settings.lutealPhase);
@@ -367,11 +383,8 @@
             };
             const saveNoteOnly = () => {
                 const note = $('#day-modal-note').value;
-                if(state.events[selectedDateStr]) {
-                    state.events[selectedDateStr].note = note;
-                } else if (note.trim()) {
-                    state.events[selectedDateStr] = { note };
-                }
+                if(state.events[selectedDateStr]) state.events[selectedDateStr].note = note;
+                else if (note.trim()) state.events[selectedDateStr] = { note };
                 saveData();
                 renderCalendar();
             };

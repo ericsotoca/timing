@@ -462,4 +462,242 @@
                     .sort((a, b) => new Date(a) - new Date(b));
 
                 // --- Affichage de l'historique ---
-                const allE
+                const allEventsSorted = Object.keys(state.events)
+                    .sort((a, b) => new Date(b) - new Date(a));
+
+                if (allEventsSorted.length === 0) {
+                    historyList.innerHTML = '<li>Aucun événement enregistré.</li>';
+                } else {
+                    allEventsSorted.forEach(dateStr => {
+                        const event = state.events[dateStr];
+                        const date = new Date(dateStr);
+                        const li = document.createElement('li');
+                        const eventName = event.type === 'R' ? 'Mode M' : 'Signal S';
+                        const eventClass = event.type === 'R' ? 'event-r' : 'event-o';
+                        li.innerHTML = `<span>${date.toLocaleDateString('fr-FR')}</span> <strong class="${eventClass}">${eventName}</strong>`;
+                        historyList.appendChild(li);
+                    });
+                }
+                
+                // --- Calcul des prédictions ---
+                if (rEvents.length < 2) {
+                    predictionText.textContent = "Ajoutez au moins deux événements 'Mode M' pour activer les prédictions.";
+                    return;
+                }
+
+                const cycleLengths = [];
+                for (let i = 1; i < rEvents.length; i++) {
+                    const diff = new Date(rEvents[i]) - new Date(rEvents[i-1]);
+                    cycleLengths.push(diff / (1000 * 60 * 60 * 24));
+                }
+                
+                const avgCycle = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
+                const lastRDate = new Date(rEvents[rEvents.length - 1]);
+                
+                const predictedRDate = new Date(lastRDate);
+                predictedRDate.setDate(predictedRDate.getDate() + Math.round(avgCycle));
+
+                const predictedODate = new Date(predictedRDate);
+                predictedODate.setDate(predictedODate.getDate() - state.settings.lutealPhase);
+                
+                // --- Trouver le prochain événement futur ---
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const futureEvents = [];
+                if (predictedRDate >= today) futureEvents.push({ type: 'R', date: predictedRDate });
+                if (predictedODate >= today) futureEvents.push({ type: 'O', date: predictedODate });
+
+                futureEvents.sort((a, b) => a.date - b.date);
+
+                if (futureEvents.length > 0) {
+                    const nextEvent = futureEvents[0];
+                    const eventName = nextEvent.type === 'R' ? 'Mode M' : 'Signal S';
+                    const eventColor = nextEvent.type === 'R' ? 'var(--event-r-color)' : 'var(--event-o-color)';
+                    const diffTime = nextEvent.date - today;
+                    const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    predictionText.textContent = `Prochain ${eventName} prévu le :`;
+                    predictionCountdown.textContent = nextEvent.date.toLocaleDateString('fr-FR');
+                    predictionCountdown.style.color = eventColor;
+                    predictionText.innerHTML += `<br><span style="font-size: 0.9em; font-weight: normal;">(Dans environ ${daysRemaining} jours)</span>`;
+                } else {
+                    predictionText.textContent = "Aucun événement futur prédit. Ajoutez de nouvelles données.";
+                }
+            }
+
+            // --- VUE CALENDRIER ---
+            function renderCalendar() {
+                calendarDays.innerHTML = '';
+                const year = state.currentDate.getFullYear();
+                const month = state.currentDate.getMonth();
+
+                monthYearDisplay.textContent = state.currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const dayOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+
+                if(dayNamesContainer.childElementCount === 0) {
+                    ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(day => {
+                        dayNamesContainer.innerHTML += `<div class="day-name">${day}</div>`;
+                    });
+                }
+
+                for (let i = 0; i < dayOffset; i++) {
+                    calendarDays.innerHTML += `<div class="day empty"></div>`;
+                }
+
+                const today = new Date();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day';
+                    dayEl.textContent = day;
+                    dayEl.dataset.date = dateStr;
+
+                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        dayEl.classList.add('today');
+                    }
+                    
+                    if (state.events[dateStr]) {
+                        const event = state.events[dateStr];
+                        const dot = document.createElement('div');
+                        dot.classList.add('event-dot');
+                        if (event.type === 'R') dot.classList.add('r-dot');
+                        if (event.type === 'O') dot.classList.add('o-dot');
+                        dayEl.appendChild(dot);
+                    }
+
+                    dayEl.addEventListener('click', () => openDayModal(dateStr));
+                    calendarDays.appendChild(dayEl);
+                }
+            }
+            
+            // --- GESTION MODALE JOUR ---
+            function openDayModal(dateStr) {
+                selectedDateStr = dateStr;
+                const date = new Date(dateStr + 'T00:00:00'); // Pour éviter les pbs de fuseau horaire
+                document.getElementById('day-modal-title').textContent = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                
+                const eventData = state.events[dateStr];
+                document.getElementById('day-modal-note').value = eventData ? eventData.note || '' : '';
+                
+                dayModal.classList.remove('hidden');
+            }
+            
+            function closeDayModal() {
+                dayModal.classList.add('hidden');
+            }
+            
+            function saveDayData(type) {
+                const note = document.getElementById('day-modal-note').value;
+                const existingEvent = state.events[selectedDateStr];
+
+                if (type) {
+                    state.events[selectedDateStr] = { ...existingEvent, type: type, note: note };
+                } else if (note.trim() !== '') {
+                    state.events[selectedDateStr] = { ...existingEvent, note: note };
+                } else if (existingEvent && !type && note.trim() === '') {
+                    delete existingEvent.note;
+                }
+                
+                if (state.events[selectedDateStr] && Object.keys(state.events[selectedDateStr]).length === 0) {
+                     delete state.events[selectedDateStr];
+                }
+
+                saveData();
+                renderCalendar();
+            }
+
+            // --- INITIALISATION & ATTACHE DES ÉVÉNEMENTS ---
+            function init() {
+                document.body.addEventListener('click', resetInactivityTimer);
+                document.body.addEventListener('keypress', resetInactivityTimer);
+                lockBtn.addEventListener('click', lockApp);
+
+                navButtons.forEach(btn => {
+                    btn.addEventListener('click', () => navigateTo(btn.dataset.view));
+                });
+                
+                prevMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); });
+                nextMonthBtn.addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); });
+
+                document.getElementById('add-r-event').addEventListener('click', () => { saveDayData('R'); closeDayModal(); });
+                document.getElementById('add-o-event').addEventListener('click', () => { saveDayData('O'); closeDayModal(); });
+                document.getElementById('remove-event').addEventListener('click', () => {
+                    if (state.events[selectedDateStr]) {
+                        delete state.events[selectedDateStr];
+                        saveData();
+                        renderCalendar();
+                    }
+                    closeDayModal();
+                });
+                document.getElementById('save-day-btn').addEventListener('click', () => { saveDayData(state.events[selectedDateStr]?.type); closeDayModal(); });
+                document.getElementById('close-day-modal-btn').addEventListener('click', closeDayModal);
+
+                document.getElementById('save-settings-btn').addEventListener('click', () => {
+                    state.settings.lutealPhase = parseInt(document.getElementById('luteal-phase-duration').value) || 14;
+                    saveData();
+                    alert('Paramètres enregistrés !');
+                });
+                document.getElementById('export-btn').addEventListener('click', () => {
+                    document.getElementById('export-data-field').value = JSON.stringify({state: state, pin: localStorage.getItem(PIN_KEY)});
+                     alert('Code de sauvegarde copié dans le champ ci-dessus.');
+                });
+                document.getElementById('import-btn').addEventListener('click', () => {
+                    if(!confirm("Importer ces données écrasera vos données actuelles. Continuer ?")) return;
+                    const dataStr = document.getElementById('import-data-field').value;
+                    try {
+                        const dataToImport = JSON.parse(dataStr);
+                        if (dataToImport.state && dataToImport.pin) {
+                            localStorage.setItem(APP_DATA_KEY, JSON.stringify(dataToImport.state));
+                            localStorage.setItem(PIN_KEY, dataToImport.pin);
+                            alert('Données importées avec succès ! L\'application va se recharger.');
+                            location.reload();
+                        } else { alert('Erreur : format de données invalide.'); }
+                    } catch (e) { alert('Erreur lors de l\'importation.'); }
+                });
+                document.getElementById('reset-app-btn').addEventListener('click', () => {
+                    if (confirm("Êtes-vous sûr de vouloir tout réinitialiser ? Toutes vos données seront perdues.")) {
+                        localStorage.removeItem(APP_DATA_KEY);
+                        localStorage.removeItem(PIN_KEY);
+                        location.reload();
+                    }
+                });
+
+                const storedPin = localStorage.getItem(PIN_KEY);
+                if (!storedPin) {
+                    setupModal.classList.remove('hidden');
+                } else {
+                    loadData();
+                }
+
+                pincodeSubmit.addEventListener('click', () => {
+                    const pin = pincodeInput.value;
+                    if (pin.length === 4 && /^\d+$/.test(pin)) {
+                        localStorage.setItem(PIN_KEY, pin);
+                        setupModal.classList.add('hidden');
+                        if (Object.keys(state.events).length === 0) {
+                            onboardingModal.classList.remove('hidden');
+                        }
+                    } else { alert("Veuillez entrer un code à 4 chiffres."); }
+                });
+                
+                startOnboardingBtn.addEventListener('click', () => {
+                    const initialDates = ['2025-09-07', '2025-10-01', '2025-10-27'];
+                    initialDates.forEach(date => {
+                        state.events[date] = { type: 'R', note: 'Import initial' };
+                    });
+                    saveData();
+                    onboardingModal.classList.add('hidden');
+                    alert('Configuration terminée ! Votre application est prête.');
+                });
+            }
+
+            init();
+        });
+    </script>
+
+</body>
+</html>
